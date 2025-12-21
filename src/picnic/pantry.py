@@ -389,8 +389,11 @@ def load_cards_from_input_deck():
         return None
 
     if event == 'OK':
-        inp = read_input_deck(values['-INP-'])
-        return inp.cards
+        if values['-INP-']:
+            inp = read_input_deck(values['-INP-'])
+            return inp.cards
+    return None
+
     
 def add_card_manually():
     """
@@ -416,8 +419,11 @@ def add_card_manually():
     window.Close()
     
     if event == 'OK':
-        card = make_card(values['-COMBO-'].lower())
-        return card
+        if values['-COMBO-']:
+            card = make_card(values['-COMBO-'].lower())
+            return card
+    return None
+
     
 def save_input_deck(deck, filename):
     """
@@ -598,7 +604,7 @@ def create_variable_window(variables):
             
             return (new_variables)
             
-        elif event == 'Cancel':
+        elif event in (sg.WIN_CLOSED, 'Cancel'):
             window.Close()
             return None
     
@@ -683,7 +689,8 @@ if __name__ == '__main__':
         # save the input deck
         elif event == '-SAVE-':
             filename = sg.popup_get_file('Choose Save File', save_as=True)
-            save_input_deck(deck, filename)
+            if filename:
+                save_input_deck(deck, filename)
         
         # clicking on the canvas
         elif event == '-CANVAS-':
