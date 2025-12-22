@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; PICNIC 0.1.4 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The run module" href="run.html" />
+    <link rel="prev" title="PICNIC (release candidate v0.1.4)" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-for-either-method">Step 1. (for either method)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-the-docker-method-recommended">Step 2. (the docker method, recommended)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-the-direct-method">Step 2. (the direct method)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#finding-results">Finding Results</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <nav class="contents" id="contents" role="doc-toc">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#usage" id="id2">Usage</a></p>
+<ul>
+<li><p><a class="reference internal" href="#step-1-for-either-method" id="id3">Step 1. (for either method)</a></p></li>
+<li><p><a class="reference internal" href="#step-2-the-docker-method-recommended" id="id4">Step 2. (the docker method, recommended)</a></p></li>
+<li><p><a class="reference internal" href="#step-2-the-direct-method" id="id5">Step 2. (the direct method)</a></p></li>
+<li><p><a class="reference internal" href="#finding-results" id="id6">Finding Results</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="usage">
+<span id="id1"></span><h1><a class="toc-backref" href="#id2" role="doc-backlink">Usage</a><a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
+<p>PICNIC allows you to design a pipeline for neuroimaging data
+in an input deck, which is a raw text file, and execute that
+workflow on your data. After your input deck is ready, there are
+two methods for executing your pipeline.</p>
+<section id="step-1-for-either-method">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Step 1. (for either method)</a><a class="headerlink" href="#step-1-for-either-method" title="Permalink to this heading"></a></h2>
+<p>Download the PICNIC code.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bil-mind-nyspi/PICNIC.git
+<span class="nb">cd</span><span class="w"> </span>PICNIC
+</pre></div>
+</div>
+</section>
+<section id="step-2-the-docker-method-recommended">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Step 2. (the docker method, recommended)</a><a class="headerlink" href="#step-2-the-docker-method-recommended" title="Permalink to this heading"></a></h2>
+<p>Pass your input deck to PICNIC’s docker container.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/run_picnic_in_docker<span class="w"> </span><span class="se">\</span>
+/path/to/input_deck.inp<span class="w"> </span><span class="se">\</span>
+/path/to/your/read_only_input_data<span class="w"> </span><span class="se">\</span>
+/path/to/write/picnic_results<span class="w"> </span><span class="se">\</span>
+/path/to/freesurfer/license.txt
+</pre></div>
+</div>
+<p>The script, <cite>run_picnic_in_docker</cite>, does several things for you.</p>
+<p>First, and most importantly, the docker container has all of
+PICNIC’s dependencies pre-installed. These include FreeSurfer 7.3.2,
+AFNI, Connectome Workbench, Convert3d, SPM12 with a Matlab
+2024b runtime, ANTs, and Python3. You don’t have to install any
+of them to your local environment. This is why we strongly recommend
+running PICNIC in docker.</p>
+<p>Second, it sets up volume mounts so docker can read your input
+data from your host system, write your outputs to your host system,
+and map the those two paths on your host into the docker container
+correctly. To do this, you specify the paths as they exist in your
+host environment. But in your input deck, you need to specify the
+paths as they exist inside the docker container. If you need to
+read input data from <cite>/home/username/pet_data/rawdata/sub-01/</cite> and
+write it to <cite>/home/username/pet_data/derivatives/picnic_0.1.4/sub-01/</cite>, and
+execute the commands in input deck <cite>/home/username/sub-01_processing.inp</cite>,
+you could use the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/run_picnic_in_docker<span class="w"> </span><span class="se">\</span>
+/home/username/sub-01_processing.inp<span class="w"> </span><span class="se">\</span>
+/home/username/pet_data/rawdata<span class="w"> </span><span class="se">\</span>
+/home/username/pet_data/derivatives/picnic_0.1.4<span class="w"> </span><span class="se">\</span>
+/usr/local/freesurfer/license.txt
+</pre></div>
+</div>
+<p>In this case, your input deck should refer to <cite>/input/sub-01</cite> and
+<cite>/output/sub-01</cite>, because the paths above would be mounted into the
+docker container as <cite>/input</cite> and <cite>/output</cite>.</p>
+<p>By default, docker runs as root, and writes files as root.
+If you have specific needs to run docker as yourself, you can use
+the alternative script, <cite>./scripts/run_picnic_remapped_in_docker_as_user</cite>.</p>
+</section>
+<section id="step-2-the-direct-method">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Step 2. (the direct method)</a><a class="headerlink" href="#step-2-the-direct-method" title="Permalink to this heading"></a></h2>
+<p>To run PICNIC directly, you need to run it on a machine with all
+of PICNIC’s dependencies already installed. If you intend to run
+FreeSurfer’s recon-all on your data, but you don’t have FreeSurfer
+installed, PICNIC will fail. If you don’t have all of PICNIC’s python
+libraries installed (see requirements.txt), PICNIC will fail.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>src/picnic/run.py<span class="w"> </span>/path/to/input_deck.inp
+</pre></div>
+</div>
+<p>One benefit of running directly is that your paths in the input deck
+remain the same, making it more straight-forward to figure out any
+problems that may arise.</p>
+</section>
+<section id="finding-results">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Finding Results</a><a class="headerlink" href="#finding-results" title="Permalink to this heading"></a></h2>
+<p>PICNIC will have saved the output from every step in the pipeline
+to the “Sink” specified in the input deck. A final html report
+will also be available to review the pipeline and do quality
+assessments.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="PICNIC (release candidate v0.1.4)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="run.html" class="btn btn-neutral float-right" title="The run module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
