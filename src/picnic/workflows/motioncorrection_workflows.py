@@ -479,7 +479,7 @@ class McflirtMocoWorkflow(MotionCorrectionWorkflow):
                 'mean_vol' : self.params['mean'],
                 'cost' : self.params['cost'],
                 'save_mats' : True,
-                'smooth' : self.params['smooth']
+                'smooth' : self.params['smooth']  # something else
             },
             outflows = (
                 'mat_file',
