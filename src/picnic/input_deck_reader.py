@@ -8,8 +8,6 @@ import json
 import string
 import logging
 
-from six import reraise
-
 from picnic.cards import get_path_to_json
 
 
@@ -103,6 +101,8 @@ class InputDeck():
                                     parameter_lines.append(line)
                                 else:
                                     # use exec to run the psudo python code for parameters
+                                    # Here, we finished accruing parameters and hit a line with a *,
+                                    # indicating it's time to move parameters to user_defined_parameters and keep moving down the file.
                                     user_defined_parameters = read_parameter_card(parameter_lines)
                                     
                                     # I personally don't like this, but I can't think of a better way to
@@ -383,14 +383,16 @@ def read_parameter_card(all_the_parameter_lines):
     all_the_parameter_lines = lines of str; this CANNOT be used as a parameter
     name
     """
-    # loop over all the parameter lines
-    for _ in all_the_parameter_lines:
-        exec(_)
+    # Create a dictionary to hold the parameters
+    parameters = {}
     
-    # Remove all the variables outside the ones created by exec
-    del _
-    del all_the_parameter_lines
-    return locals()
+    # loop over all the parameter lines
+    for line in all_the_parameter_lines:
+        # Check if the line is not a comment or empty
+        if line.strip() and not line.strip().startswith(commenter):
+            exec(line, {}, parameters)
+    
+    return parameters
     
 
 def read_input_deck(input_deck):
