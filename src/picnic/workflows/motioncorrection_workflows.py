@@ -474,7 +474,7 @@ class McflirtMocoWorkflow(MotionCorrectionWorkflow):
             interface = fsl.MCFLIRT(),
             name = 'mcflirt_registration',
             inflows = {
-                'in_file' : '@crop_image',
+                'in_file' : '@crop_image',  # something
                 'ref_vol' : self.params['ref_vol'],
                 'mean_vol' : self.params['mean'],
                 'cost' : self.params['cost'],
