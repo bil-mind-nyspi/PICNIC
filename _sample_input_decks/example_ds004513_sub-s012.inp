@@ -28,7 +28,7 @@
     @${subject_id}_reconall.wholebrain_mask
     @${subject_id}_reconall.wm_mask
     @${subject_id}_reconall.gm_mask
-  *TACs, name=ses-${subject_id}_tacs
+  *TACs, name=ses-${subject_id}_tacs, regions='/path/to/file.json'
     ${subject_id}_coreg.out_file
     ${subject_id}_reconall.bilateral_wmparc
 
