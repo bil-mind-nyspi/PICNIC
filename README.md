@@ -1,5 +1,21 @@
 # PICNIC
 
+PICNIC is a general purpose neuroimaging preprocessing pipeline.
+It is flexible enough to be used for orchestrating many neuroimaging-related
+tasks, but it was developed for preprocessing PET and structural MRI.
+Please see the provided [example input deck](PICNIC/_sample_input_decks/example_ds004513_sub-s012.inp)
+for a typical use case for our lab involving a full FreeSurfer recon-all run on
+a structural T1-weighted MRI, motion correction on a PET image,
+co-registration of the PET image to the structural MRI, and
+extraction of time activity curves from FreeSurfer regions specified
+in a json file.
+
+Because of the dependence of any neuroimaging pipeline on various utilities,
+we recommend using the PICNIC docker container, which has the dependencies
+pre-installed. However, you are welcome to install the dependencies locally
+and run PICNIC that way as well. Issuing the `RUN` commands in the
+[Dockerfile](PICNIC/Dockerfile) is a good way to set this up.
+
 ## Run PICNIC in docker (easiest)
 
 You need to have docker installed already, then you can download the docker
@@ -13,7 +29,7 @@ We have also provided an example input deck
 (PICNIC/_sample_input_decks/example_ds004513_sub-s012.inp)
 to process one subject from the downloadable
 [The energetic costs of the human connectome](https://doi.org/10.18112/openneuro.ds004513.v1.0.0)
-dataset. Edit the paths inside the input deck to reflect your system.
+dataset. Edit the paths in the input deck to match it to your system.
 
 ```bash
 /path/to/picnic/scripts/run_picnic_in_docker \
@@ -23,7 +39,7 @@ dataset. Edit the paths inside the input deck to reflect your system.
   /path/to/freesurfer/license.txt
 ```
 
-Or you can use docker directly for more control.
+Or you can bypass the script and use docker directly for more control.
 
 ```bash
 docker pull mfschmidt/picnic:latest
@@ -46,3 +62,10 @@ pip install -U git+git@github.com:bil-mind-nyspi/PICNIC.git
 cd PICNIC
 ./src/picnic/run.py my_input_deck.inp
 ```
+
+## Documentation
+
+For more detailed instructions and information about the functions available within
+the PICNIC package, see our more complete [documentation](https://bil-mind-nyspi.github.io/PICNIC/).
+
+To report issues, please use the github issues [page](https://github.com/bil-mind-nyspi/PICNIC/issues).

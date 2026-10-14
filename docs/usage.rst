@@ -23,8 +23,8 @@ Download the PICNIC code.
    cd PICNIC
 
 
-Step 2. (the docker method, recommended)
-----------------------------------------
+Step 2, alternative A. (the docker method, recommended)
+-------------------------------------------------------
 
 Pass your input deck to PICNIC's docker container.
 
@@ -41,9 +41,9 @@ The script, `run_picnic_in_docker`, does several things for you.
 
 First, and most importantly, the docker container has all of
 PICNIC's dependencies pre-installed. These include FreeSurfer 7.3.2,
-AFNI, Connectome Workbench, Convert3d, SPM12 with a Matlab
+AFNI, Connectome Workbench, Convert3d, SPM25 with a Matlab
 2024b runtime, ANTs, and Python3. You don't have to install any
-of them to your local environment. This is why we strongly recommend
+of them to your local environment, which is why we strongly recommend
 running PICNIC in docker.
 
 Second, it sets up volume mounts so docker can read your input
@@ -74,8 +74,8 @@ If you have specific needs to run docker as yourself, you can use
 the alternative script, `./scripts/run_picnic_remapped_in_docker_as_user`.
 
 
-Step 2. (the direct method)
----------------------------
+Step 2, alternative B. (the direct method)
+------------------------------------------
 
 To run PICNIC directly, you need to run it on a machine with all
 of PICNIC's dependencies already installed. If you intend to run
@@ -90,7 +90,8 @@ libraries installed (see requirements.txt), PICNIC will fail.
 
 One benefit of running directly is that your paths in the input deck
 remain the same, making it more straight-forward to figure out any
-problems that may arise.
+problems that may arise. If you'd like to debug issues or modify
+PICNIC code, running locally can also make debugging easier.
 
 Finding Results
 ---------------
