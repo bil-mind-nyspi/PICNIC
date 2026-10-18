@@ -1,17 +1,21 @@
 # PICNIC Docker Container
-#
-# Ubuntu 22.04 LTS - Jammy
-ARG BASE_IMAGE=ubuntu:jammy-20240808
+# This staged build borrowed heavily from fMRIPrep's Dockerfile
+# at https://github.com/nipreps/fmriprep/blob/master/Dockerfile.base
+
+# Ubuntu 24.04 LTS - Noble Numbat - Default python in this release is 3.12
+ARG BASE_IMAGE=ubuntu:noble-20260930.1
 
 #
-# Build wheel
+# Build PICNIC wheel
 #
-FROM python:slim AS src
-RUN pip install build
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git
+FROM ${BASE_IMAGE} AS src
 COPY . /src
-RUN python -m build /src
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git python3 python3-venv && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    /usr/bin/python3 -m venv /opt/build && \
+    /opt/build/bin/pip install --no-cache-dir build && \
+    /opt/build/bin/python3 -m build --wheel /src
 
 #
 # Download stages
@@ -20,7 +24,7 @@ RUN python -m build /src
 # Utilities for downloading packages
 FROM ${BASE_IMAGE} AS downloader
 # Bump the date to current to refresh curl/certificates/etc
-RUN echo "2024.08.26"
+RUN echo "2026.10.18"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
                     binutils \
@@ -30,16 +34,17 @@ RUN apt-get update && \
                     unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# FreeSurfer 7.3.2
+# FreeSurfer 7.4.1
 FROM downloader AS freesurfer
+RUN echo "2026.10.18"
 COPY docker/files/freesurfer_7.3.2_exclude.txt /usr/local/etc/freesurfer_7.3.2_exclude.txt
-RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.3.2/freesurfer-linux-ubuntu22_amd64-7.3.2.tar.gz \
+RUN curl -sSL https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/7.4.1/freesurfer-linux-ubuntu22_amd64-7.4.1.tar.gz \
      | tar zxv --no-same-owner -C /opt --exclude-from=/usr/local/etc/freesurfer_7.3.2_exclude.txt
 
 # AFNI
 FROM downloader AS afni
 # Bump the date to current to update AFNI
-RUN echo "2024.08.26"
+RUN echo "2026.10.18"
 RUN mkdir -p /opt/afni-latest \
     && curl -fsSL --retry 5 https://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz \
     | tar -xz -C /opt/afni-latest --strip-components 1 \
@@ -50,31 +55,30 @@ RUN mkdir -p /opt/afni-latest \
     --exclude "linux_openmp_64/lib/RetroTS" \
     --exclude "linux_openmp_64/lib_RetroTS" \
     --exclude "linux_openmp_64/meica.libs" \
-    # Keep only what we use
     && find /opt/afni-latest -type f -not \( \
         -name "3dTshift" -or \
         -name "3dUnifize" -or \
         -name "3dAutomask" -or \
         -name "3dvolreg" \) -delete
 
-# Connectome Workbench 2.0.0
+# Connectome Workbench 2.2.1
 FROM downloader AS workbench
+RUN echo "2026.10.18"
 RUN mkdir /opt/workbench && \
-    curl -sSLO https://www.humanconnectome.org/storage/app/media/workbench/workbench-linux64-v2.0.0.zip && \
-    unzip workbench-linux64-v2.0.0.zip -d /opt && \
-    rm workbench-linux64-v2.0.0.zip && \
-    rm -rf /opt/workbench/libs_linux64_software_opengl /opt/workbench/plugins_linux64 && \
-    strip --remove-section=.note.ABI-tag /opt/workbench/libs_linux64/libQt5Core.so.5
+    curl -sSLO https://www.humanconnectome.org/storage/app/media/workbench/workbench-linux64-v2.2.1.zip && \
+    unzip workbench-linux64-v2.2.1.zip -d /opt && \
+    rm workbench-linux64-v2.2.1.zip
 
 # Convert3d 1.4.0
 FROM downloader AS c3d
+RUN echo "2026.10.18"
 RUN mkdir /opt/convert3d && \
-    curl -fsSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/Experimental/c3d-1.4.0-Linux-gcc64.tar.gz/download \
+    curl -fsSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/Experimental/c3d-1.4.4-Linux-gcc64.tar.gz/download \
     | tar -xz -C /opt/convert3d --strip-components 1
 
 # Matlab MCR and SPM
 FROM downloader AS spm
-
+RUN echo "2026.10.18"
 # Architecture of spm docker container based on github spm/spm-docker
 # These args are repeated in the final image, so make changes in both places.
 ARG MATLAB_VERSION=R2024b
@@ -104,18 +108,17 @@ RUN wget --no-check-certificate --progress=bar:force -P /opt https://github.com/
     && /opt/runtime_installer/Runtime_${MATLAB_VERSION}_for_spm_standalone_${SPM_TAG}.install -agreeToLicense ${AGREE_TO_MATLAB_RUNTIME_LICENSE} \
     && chmod +w /opt/spm \
     && /opt/spm/spm${SPM_VERSION} function exit \
-    && chmod +x /opt/spm/spm${SPM_VERSION} \
-    && ln -s /opt/spm/spm${SPM_VERSION} /usr/local/bin/spm
+    && chmod +x /opt/spm/spm${SPM_VERSION}
 
 FROM downloader AS ants
-
+RUN echo "2026.10.18"
 ARG CC=gcc-11
 ARG CXX=g++-11
 ARG BUILD_SHARED_LIBS=ON
 
 RUN \
     --mount=type=cache,sharing=private,target=/var/cache/apt \
-    apt-get update && apt-get install -y g++-11 cmake make ninja-build git bc
+    apt-get update && apt-get install -y ${CXX} cmake make ninja-build git bc
 
 WORKDIR /usr/local/src
 RUN git config --global url.'https://'.insteadOf 'git://' \
@@ -141,7 +144,7 @@ RUN cmake --build . --target test
 
 # Micromamba
 FROM downloader AS micromamba
-
+RUN echo "2026.10.18"
 # Install a C compiler to build extensions when needed.
 # traits<6.4 wheels are not available for Python 3.11+, but build easily.
 RUN apt-get update && \
@@ -150,7 +153,7 @@ RUN apt-get update && \
 
 WORKDIR /
 # Bump the date to current to force update micromamba
-RUN echo "2024.08.26"
+RUN echo "2026.10.18"
 RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
 
 ENV MAMBA_ROOT_PREFIX="/opt/conda"
@@ -236,6 +239,7 @@ COPY --from=micromamba /opt/conda/envs/picnic /opt/conda/envs/picnic
 # Simulate SetUpFreeSurfer.sh & FSL & AFNI & Workbench & SPM & ANTs configs
 ARG FREESURFER_HOME="/opt/freesurfer"
 ARG MATLAB_VERSION=R2024b
+ARG SPM_VERSION=25
 ENV OS="Linux" \
     IS_DOCKER_PICNIC=1 \
     FS_OVERRIDE=0 \
@@ -274,7 +278,8 @@ ENV OS="Linux" \
     HOME="/home/picnic"
 
 # SPM config
-RUN chmod a+w /opt/spm && ln -s /opt/spm/spm${SPM_VERSION} ${MCRSPMCMD}
+RUN chmod a+w /opt/spm && \
+    ln -s /opt/spm/spm${SPM_VERSION} ${MCRSPMCMD}
 
 # Create a shared $HOME directory
 RUN useradd -m -s /bin/bash -G users picnic
@@ -304,13 +309,13 @@ RUN pip install --no-cache-dir $( ls *.whl ) \
 WORKDIR /tmp
 ENTRYPOINT ["/opt/conda/envs/picnic/bin/python3", "/opt/conda/envs/picnic/bin/run.py"]
 
-ARG BUILD_DATE=2024-12-11
-ARG PICNIC_VERSION=0.0.8
+ARG BUILD_DATE=2026-10-18
+ARG PICNIC_VERSION=0.2.0
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="PICNIC" \
       org.label-schema.description="PICNIC - A modular PET preprocessing tool" \
-      org.label-schema.url="https://github.com/ehauser-mind/PICNIC" \
+      org.label-schema.url="https://github.com/bil-mind-nyspi/PICNIC" \
       org.label-schema.vcs-ref=v$PICNIC_VERSION \
-      org.label-schema.vcs-url="https://github.com/ehauser-mind/PICNIC" \
+      org.label-schema.vcs-url="https://github.com/bil-mind-nyspi/PICNIC" \
       org.label-schema.version=$PICNIC_VERSION \
       org.label-schema.schema-version="1.0"
