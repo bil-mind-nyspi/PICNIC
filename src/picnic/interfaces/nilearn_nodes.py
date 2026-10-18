@@ -752,11 +752,11 @@ def _create_report(type_, in_files, additional_args=[]):
             for thr in COORDS_THRESHOLD[direction]:
                 # bounce back and forth to locate the bounds
                 l_idx, u_idx = (0, len(distribution))
-                total_area = np.trapz(distribution)
+                total_area = np.trapezoid(distribution)
                 
                 while u_idx - l_idx > 1.:
                     idx = (l_idx + u_idx) // 2
-                    area = np.trapz(distribution[:idx])
+                    area = np.trapezoid(distribution[:idx])
                     if area/total_area > (thr/100.)+0.005:
                         u_idx = idx
                     elif area/total_area < (thr/100.)-0.005:

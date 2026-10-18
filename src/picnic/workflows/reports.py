@@ -449,11 +449,11 @@ def calculate_cut_coords_bounds(nifti):
         cut_coords_bounds[direction] = []
         for thr in COORDS_THRESHOLD[direction]:
             lower_idx, upper_idx = int(0), len(dist)
-            total_area = np.trapz(dist)
+            total_area = np.trapezoid(dist)
 
             while upper_idx-lower_idx > 1.:
                 idx = (lower_idx + upper_idx) // 2
-                area = np.trapz(dist[:idx])
+                area = np.trapezoid(dist[:idx])
                 if area/total_area > (thr/100.)+0.005:
                     upper_idx = idx
                 elif area/total_area < (thr/100.)-0.005:
