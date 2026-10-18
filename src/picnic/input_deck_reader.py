@@ -377,21 +377,26 @@ def check_file_exists(filename):
 
 def read_parameter_card(all_the_parameter_lines):
     r"""
-    A function built to read and execute the \*parameter keyword. This has to be
-    in built in a local space outside the typical object structure to try and
+    A function built to read and execute the \*parameter keyword.
+    This has to be built in a local space outside the typical object structure to
     mitigate some of the danger of using the exec command.
-    all_the_parameter_lines = lines of str; this CANNOT be used as a parameter
-    name
     """
-    # loop over all the parameter lines
-    for _ in all_the_parameter_lines:
-        exec(_)
-    
-    # Remove all the variables outside the ones created by exec
-    del _
-    del all_the_parameter_lines
-    return locals()
-    
+
+    # Create a dictionary to hold the parameters
+    parameters = {}
+
+    # loop over all the parameter lines, determining validity
+    valid_lines = [
+        line for line in all_the_parameter_lines
+        if line.strip() and not line.strip().startswith(commenter)
+    ]
+    # Execute those that pass the test, assigning values to parameters
+    if valid_lines:
+        code_block = "\n".join(valid_lines)
+        # With __builtins__, variables can be assigned, but dangerous code cannot be run
+        exec(code_block, {"__builtins__": {}}, parameters)
+
+    return parameters
 
 def read_input_deck(input_deck):
     """
