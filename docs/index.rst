@@ -31,6 +31,8 @@ or explore the rest of the documentation.
   workflows
   reporting
 
+  changelog
+
 Indices and tables
 ==================
 

@@ -15,7 +15,7 @@
 
   # PET Imports
   *Import, name=${subject_id}_pet, Type=nibabel
-    ${input_path}/sub-${subject_id}/ses-open/anat/sub-${subject_id}_ses-open_T1w.nii.gz
+    ${input_path}/sub-${subject_id}/ses-open/pet/sub-${subject_id}_ses-open_task-rest_pet.nii.gz
   
   # Modules
   *Reconall, name=${subject_id}_reconall, Type=Execute
@@ -29,7 +29,7 @@
     @${subject_id}_reconall.wm_mask
     @${subject_id}_reconall.gm_mask
   *TACs, name=ses-${subject_id}_tacs
-    ${subject_id}_coreg.out_file
-    ${subject_id}_reconall.bilateral_wmparc
+    @${subject_id}_coreg.out_file
+    @${subject_id}_reconall.bilateral_wmparc
 
 *End
