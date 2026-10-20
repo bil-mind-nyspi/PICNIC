@@ -309,8 +309,8 @@ RUN pip install --no-cache-dir $( ls *.whl ) \
 WORKDIR /tmp
 ENTRYPOINT ["/opt/conda/envs/picnic/bin/python3", "/opt/conda/envs/picnic/bin/run.py"]
 
-ARG BUILD_DATE=2026-10-18
-ARG PICNIC_VERSION=0.2.0
+ARG BUILD_DATE=2026-10-20
+ARG PICNIC_VERSION=0.2.1
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="PICNIC" \
       org.label-schema.description="PICNIC - A modular PET preprocessing tool" \
