@@ -1,13 +1,13 @@
-# Included in yml file, must match versions
-numpy~=2.4
-scipy~=1.17
+# Included in yml file to support FSL, must match versions
+numpy~=2.5
+scipy~=1.18
 matplotlib~=3.11
 pandas~=3.0
-# Independent of yml file
+nibabel~=5.4
+nilearn~=0.14
+# Independent of yml file, just for PICNIC
 setuptools~=82.0
 FreeSimpleGUI~=5.2.0.post1
 pillow~=12.2
-nibabel~=5.4
-nilearn~=0.13
-nipype~=1.11
+nipype~=1.12
 templateflow~=25.1
