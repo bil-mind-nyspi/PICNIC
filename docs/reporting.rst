@@ -1,5 +1,3 @@
-.. autodoc:
-
 .. contents::
 
 Reporting

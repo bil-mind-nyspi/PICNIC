@@ -1,5 +1,3 @@
-.. autodoc:
-
 .. contents::
 
 PICNIC Nodes and Workflows
