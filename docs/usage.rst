@@ -1,5 +1,3 @@
-.. autodoc:
-
 .. contents::
 
 .. _usage:
@@ -40,7 +38,7 @@ Pass your input deck to PICNIC's docker container.
 The script, `run_picnic_in_docker`, does several things for you.
 
 First, and most importantly, the docker container has all of
-PICNIC's dependencies pre-installed. These include FreeSurfer 7.3.2,
+PICNIC's dependencies pre-installed. These include FreeSurfer 7.4.1,
 AFNI, Connectome Workbench, Convert3d, SPM25 with a Matlab
 2024b runtime, ANTs, and Python3. You don't have to install any
 of them to your local environment, which is why we strongly recommend
@@ -53,7 +51,7 @@ correctly. To do this, you specify the paths as they exist in your
 host environment. But in your input deck, you need to specify the
 paths as they exist inside the docker container. If you need to
 read input data from `/home/username/pet_data/rawdata/sub-01/` and
-write it to `/home/username/pet_data/derivatives/picnic_0.1.4/sub-01/`, and
+write it to `/home/username/pet_data/derivatives/picnic_0.2.1/sub-01/`, and
 execute the commands in input deck `/home/username/sub-01_processing.inp`,
 you could use the following command:
 
@@ -62,7 +60,7 @@ you could use the following command:
    ./scripts/run_picnic_in_docker \
    /home/username/sub-01_processing.inp \
    /home/username/pet_data/rawdata \
-   /home/username/pet_data/derivatives/picnic_0.1.4 \
+   /home/username/pet_data/derivatives/picnic_0.2.1 \
    /usr/local/freesurfer/license.txt
 
 In this case, your input deck should refer to `/input/sub-01` and

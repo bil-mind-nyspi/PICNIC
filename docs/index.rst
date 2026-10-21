@@ -1,5 +1,5 @@
 
-PICNIC (release candidate v__VERSION__)
+PICNIC (v__VERSION__)
 =======================================
 
 Quick Start

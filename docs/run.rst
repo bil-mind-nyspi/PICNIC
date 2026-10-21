@@ -1,5 +1,3 @@
-.. autodoc:
-
 .. contents::
 
 The run module

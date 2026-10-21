@@ -1,5 +1,3 @@
-.. autodoc:
-
 .. contents::
 
 PICNIC Version history and change log
@@ -8,6 +6,7 @@ PICNIC Version history and change log
 Version 0.2.1
 
 - Updated python libraries in environment.txt and matched them to env.yml
+- Fixed documentation bugs preventing autodoc from finding code comments
 
 Version 0.2.0
 

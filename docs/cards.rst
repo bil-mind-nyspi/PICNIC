@@ -1,5 +1,3 @@
-.. autodoc:
-
 .. contents::
 
 Base Card and CardBuilder
