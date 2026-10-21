@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The run module &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Base Card and CardBuilder" href="cards.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The run module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-use-this-module">How To Use This Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.run.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.run.Pipeline.build_workflow"><code class="docutils literal notranslate"><span class="pre">Pipeline.build_workflow()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.run.ProcessInputs"><code class="docutils literal notranslate"><span class="pre">ProcessInputs</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.run.ProcessInputs.fill_dox"><code class="docutils literal notranslate"><span class="pre">ProcessInputs.fill_dox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.run.ProcessInputs.initialize_pipelines"><code class="docutils literal notranslate"><span class="pre">ProcessInputs.initialize_pipelines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.run.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.run.Report.integrate_report"><code class="docutils literal notranslate"><span class="pre">Report.integrate_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.run.Report.write_html"><code class="docutils literal notranslate"><span class="pre">Report.write_html()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.run.create_parser"><code class="docutils literal notranslate"><span class="pre">create_parser()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.run.infer_class_name_from_card_name"><code class="docutils literal notranslate"><span class="pre">infer_class_name_from_card_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.run.insert_parameters"><code class="docutils literal notranslate"><span class="pre">insert_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The run module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/run.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <nav class="contents" id="contents" role="doc-toc">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#module-picnic.run" id="id1">The run module</a></p>
+<ul>
+<li><p><a class="reference internal" href="#how-to-use-this-module" id="id2">How To Use This Module</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="module-picnic.run">
+<span id="the-run-module"></span><h1><a class="toc-backref" href="#id1" role="doc-backlink">The run module</a><a class="headerlink" href="#module-picnic.run" title="Permalink to this heading"></a></h1>
+<p>Run PICNIC by providing an input deck or a group of input decks.</p>
+<section id="how-to-use-this-module">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">How To Use This Module</a><a class="headerlink" href="#how-to-use-this-module" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><dl>
+<dt>call the <cite>run.py</cite> script directly</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">python</span> <span class="n">run</span><span class="o">.</span><span class="n">py</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">input_deck</span><span class="o">.</span><span class="n">inp</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p>adding the -d argument will require a csv to create a dox</p></li>
+<li><dl class="simple">
+<dt>PICNIC will sequentially loop over the input decks to create and run the</dt><dd><p>pipelines.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.run.Pipeline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.run.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_deck_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#Pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.Pipeline" title="Permalink to this definition"></a></dt>
+<dd><p>an object to hold the important attributes of a completed pipeline. In this
+case a pipeline is equivalent to a series of workflows appended on to each
+other.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.run.Pipeline.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#Pipeline.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.Pipeline.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>build the entire pipeline’s workflow</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.run.ProcessInputs">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.run.</span></span><span class="sig-name descname"><span class="pre">ProcessInputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#ProcessInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.ProcessInputs" title="Permalink to this definition"></a></dt>
+<dd><p>an object to process all inputs set up by the argument parser</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.run.ProcessInputs.fill_dox">
+<span class="sig-name descname"><span class="pre">fill_dox</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#ProcessInputs.fill_dox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.ProcessInputs.fill_dox" title="Permalink to this definition"></a></dt>
+<dd><p>use the csv build a dox and create new inputs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.run.ProcessInputs.initialize_pipelines">
+<span class="sig-name descname"><span class="pre">initialize_pipelines</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#ProcessInputs.initialize_pipelines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.ProcessInputs.initialize_pipelines" title="Permalink to this definition"></a></dt>
+<dd><p>initialize all the pipelines</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.run.Report">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.run.</span></span><span class="sig-name descname"><span class="pre">Report</span></span><a class="reference internal" href="_modules/picnic/run.html#Report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.Report" title="Permalink to this definition"></a></dt>
+<dd><p>an object to collect lines from sub-reports into an html summary</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.run.Report.integrate_report">
+<span class="sig-name descname"><span class="pre">integrate_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_report</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#Report.integrate_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.Report.integrate_report" title="Permalink to this definition"></a></dt>
+<dd><p>Read from sub_report and integrate it into this summary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>-. <cite>individual_report</cite>: a subreport from one of many workflows</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.run.Report.write_html">
+<span class="sig-name descname"><span class="pre">write_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#Report.write_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.Report.write_html" title="Permalink to this definition"></a></dt>
+<dd><p>Write out the summary report.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.run.create_parser">
+<span class="sig-prename descclassname"><span class="pre">picnic.run.</span></span><span class="sig-name descname"><span class="pre">create_parser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#create_parser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.create_parser" title="Permalink to this definition"></a></dt>
+<dd><p>use argparse to correctly parse the arguments supplied by the user</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>-. an ArgumentParser obj</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.run.infer_class_name_from_card_name">
+<span class="sig-prename descclassname"><span class="pre">picnic.run.</span></span><span class="sig-name descname"><span class="pre">infer_class_name_from_card_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">card_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#infer_class_name_from_card_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.infer_class_name_from_card_name" title="Permalink to this definition"></a></dt>
+<dd><p>returns a string of the suspected class name by giving a card name. This
+assumes all spaces will be removed, the first word will be capitalized and
+CamelCase will be used for subsequent words.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>-. <cite>card_name</cite> : a string, the name of the card</p>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>-.  a string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.run.insert_parameters">
+<span class="sig-prename descclassname"><span class="pre">picnic.run.</span></span><span class="sig-name descname"><span class="pre">insert_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dox_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/run.html#insert_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.run.insert_parameters" title="Permalink to this definition"></a></dt>
+<dd><p>creates new input decks from a list of template inps and a test readable
+dox file. This function will iterate over the template inps and add new
+parameters for each new run in the dox.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p>-. <cite>inps</cite>: a list, the inp templates
+-. <cite>dox_file</cite>: a file-like str, the text readable table</p>
+</dd>
+<dt class="field-even">Return<span class="colon">:</span></dt>
+<dd class="field-even"><p>-. a list, of newly created input decks</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cards.html" class="btn btn-neutral float-right" title="Base Card and CardBuilder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

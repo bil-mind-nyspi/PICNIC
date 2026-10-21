@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>picnic.workflows.custom_workflow_constructors &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">picnic.workflows.custom_workflow_constructors</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for picnic.workflows.custom_workflow_constructors</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =======================================</span>
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">Node</span><span class="p">,</span> <span class="n">MapNode</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">,</span> <span class="n">DataSink</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Constants</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Classes</span>
+<div class="viewcode-block" id="NipibipyWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow">[docs]</a><span class="k">class</span> <span class="nc">NipibipyWorkflow</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Nipibipy custom workflows</span>
+<span class="sd">    </span>
+<span class="sd">    By leveraging nipype&#39;s workflow system we have some helper methods to build </span>
+<span class="sd">    workflows as the module is being assembled. Most of the heavy lifting is </span>
+<span class="sd">    being done by the add_node and add_mapnode methods.</span>
+<span class="sd">    </span>
+<span class="sd">    The public attributes that are important:</span>
+<span class="sd">        workflow - the nipype.Workflow assigned to the module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">outflows</span><span class="p">,</span> <span class="n">sink_directory</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name - str</span>
+<span class="sd">            name of workflow, usually the &#39;*&#39; card&#39;s name</span>
+<span class="sd">        outflows - dict</span>
+<span class="sd">            the open outputs going OUT of the workflow</span>
+<span class="sd">        sink_directory - file-like string</span>
+<span class="sd">            the path where the results will be stored. If blank no sinking will </span>
+<span class="sd">            happen</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflows</span> <span class="o">=</span> <span class="n">outflows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sink</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">sink_directory</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sink</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span>
+                <span class="n">DataSink</span><span class="p">(</span>
+                    <span class="n">parameterization</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">base_directory</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sink_directory</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_sink&#39;</span><span class="p">,</span> 
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">base_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sink_directory</span><span class="p">,</span> <span class="s2">&quot;_work&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">work_directory</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="n">work_directory</span><span class="p">)</span>
+
+<div class="viewcode-block" id="NipibipyWorkflow.add_node"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">inflows</span><span class="p">,</span> <span class="n">outflows</span><span class="p">,</span> <span class="n">to_sink</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; add a node to the current workflow</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interface - nipype interface</span>
+<span class="sd">            the Node interface. ex - Function, Dcm2niix, FLIRT, etc.</span>
+<span class="sd">        name - str</span>
+<span class="sd">            the node name</span>
+<span class="sd">        inflows - dict</span>
+<span class="sd">            pairing of the required inputs and where they are connecting from</span>
+<span class="sd">            ex {&#39;in_file&#39; : &#39;workflow_step_1.out_file&#39;} or {&#39;idx&#39; : 1}</span>
+<span class="sd">        outflows - tuple</span>
+<span class="sd">            the node outputs. There is no pair because the doesn&#39;t (to this </span>
+<span class="sd">            point) know where to connect them</span>
+<span class="sd">        to_sink - list</span>
+<span class="sd">            list of all the outflows that should be sunk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">NipibipyNode</span><span class="p">(</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">),</span> <span class="n">outflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assign_node_inputs</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sink_outflows</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">list</span><span class="p">()</span> <span class="k">if</span> <span class="n">to_sink</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">to_sink</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NipibipyWorkflow.add_mapnode"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_mapnode">[docs]</a>    <span class="k">def</span> <span class="nf">add_mapnode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interface</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">inflows</span><span class="p">,</span> <span class="n">outflows</span><span class="p">,</span> <span class="n">iterfield</span><span class="p">,</span> <span class="n">to_sink</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; add a mapnode to the current workflow</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        interface - Nipype interface</span>
+<span class="sd">            the Node interface. ex - Function, Dcm2niix, FLIRT, etc.</span>
+<span class="sd">        name - str</span>
+<span class="sd">            the node name</span>
+<span class="sd">        inflows - dict</span>
+<span class="sd">            pairing of the required inputs and where they are connecting from</span>
+<span class="sd">        outflows - tuple</span>
+<span class="sd">            the node outputs. There is no pair because the doesn&#39;t (to this </span>
+<span class="sd">            point) know where to connect them</span>
+<span class="sd">        iterfield - list</span>
+<span class="sd">            a list of all the field that should be iterated</span>
+<span class="sd">        to_sink - list</span>
+<span class="sd">            list of all the outflows that should be sunk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">NipibipyNode</span><span class="p">(</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">iterfield</span><span class="o">=</span><span class="n">iterfield</span><span class="p">),</span> <span class="n">outflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assign_node_inputs</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sink_outflows</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">list</span><span class="p">()</span> <span class="k">if</span> <span class="n">to_sink</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">to_sink</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="NipibipyWorkflow.assign_node_inputs"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.assign_node_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">assign_node_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; assign the node inflows. Either find its connection to another node</span>
+<span class="sd">        or assign the string, int, etc</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node_name - str</span>
+<span class="sd">            name of the node</span>
+<span class="sd">        inflows - dict</span>
+<span class="sd">            pairing of the required inputs and where they are connecting from</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inflows</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># if the connecting portion of the dict is a string, check if it is </span>
+            <span class="c1">#   connecting to other parts of the workflow or a literal string</span>
+            <span class="c1">#   connections have the syntax &#39;workflow_step_1.out_file&#39;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+                <span class="n">check_connection</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                <span class="c1"># check if the first part of the string corresponds to an existing node</span>
+                <span class="k">if</span> <span class="n">check_connection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># if the string didn&#39;t get split, assume we are taking the </span>
+                    <span class="c1">#   first item in the corresponding outflow</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">check_connection</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">check_connection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">check_connection</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">outflows</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">check_connection</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">check_connection</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">check_connection</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">outflows</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">connect_nodes</span><span class="p">(</span><span class="n">node_name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="n">check_connection</span><span class="p">)</span>
+                            <span class="k">continue</span>
+            <span class="c1"># if we make it through ALL that without connecting a node, assume </span>
+            <span class="c1">#   it is a literal string</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="NipibipyWorkflow.connect_nodes"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.connect_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">connect_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_node_name</span><span class="p">,</span> <span class="n">in_connection</span><span class="p">,</span> <span class="n">out_node_name</span><span class="p">,</span> <span class="n">out_connection</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; connect two nodes together</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        in_node_name - str</span>
+<span class="sd">            the name of the node being connected</span>
+<span class="sd">        in_connection - str</span>
+<span class="sd">            the name of the connection</span>
+<span class="sd">        out_node_name - str</span>
+<span class="sd">            the name of the node doing the connecting</span>
+<span class="sd">        out_connection - str</span>
+<span class="sd">            the name of the connection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">out_node_name</span><span class="p">]</span><span class="o">.</span><span class="n">node</span><span class="p">,</span>
+            <span class="n">out_connection</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">in_node_name</span><span class="p">]</span><span class="o">.</span><span class="n">node</span><span class="p">,</span>
+            <span class="n">in_connection</span>
+        <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="NipibipyWorkflow.sink_outflows"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.sink_outflows">[docs]</a>    <span class="k">def</span> <span class="nf">sink_outflows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_name_being_sunk</span><span class="p">,</span> <span class="n">outflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; sink the designated outflows</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node_name_being_sunk - str</span>
+<span class="sd">            the name of the node being sunk</span>
+<span class="sd">        outflows - list (or other iterable)</span>
+<span class="sd">            a list of the outputs to sink</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sink</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">outflow</span> <span class="ow">in</span> <span class="n">outflows</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">all_nodes</span><span class="p">[</span><span class="n">node_name_being_sunk</span><span class="p">]</span><span class="o">.</span><span class="n">node</span><span class="p">,</span>
+                    <span class="n">outflow</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sink</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.@&#39;</span> <span class="o">+</span> <span class="n">node_name_being_sunk</span> <span class="o">+</span> <span class="s1">&#39;.@&#39;</span> <span class="o">+</span> <span class="n">outflow</span>
+                <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="NipibipyWorkflow.run"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; shortcut to run the workflow that has already been built</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        base_dir - file-like str</span>
+<span class="sd">            the location to store the intermediate temp files</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># set a new base dir</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">base_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">base_dir</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div></div>
+
+<div class="viewcode-block" id="NipibipyNode"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.custom_workflow_constructors.NipibipyNode">[docs]</a><span class="k">class</span> <span class="nc">NipibipyNode</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; a helper to associated node with the outflows</span>
+<span class="sd">    </span>
+<span class="sd">    The sole purpose of this is to keep track of the outflow so connecting </span>
+<span class="sd">    them later will be easier</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">outflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node - nipype.Node</span>
+<span class="sd">            the nipype node</span>
+<span class="sd">        outflow - tuple</span>
+<span class="sd">            all the outflow names</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflows</span> <span class="o">=</span> <span class="n">outflows</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

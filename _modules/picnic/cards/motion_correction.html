@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>picnic.cards.motion_correction &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">picnic.cards.motion_correction</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for picnic.cards.motion_correction</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =======================================</span>
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="c1"># from picnic.cards.card_builder import CardBuilder</span>
+<span class="c1"># from picnic.workflows.motioncorrection_workflows import (</span>
+    <span class="c1"># FlirtMocoWorkflow,</span>
+    <span class="c1"># McflirtMocoWorkflow,</span>
+    <span class="c1"># TwoStepMocoWorkflow</span>
+<span class="c1"># )</span>
+<span class="kn">from</span> <span class="nn">picnic.cards.card_builder</span> <span class="kn">import</span> <span class="n">CardBuilder</span>
+<span class="kn">from</span> <span class="nn">picnic.workflows.motioncorrection_workflows</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FlirtMocoWorkflow</span><span class="p">,</span>
+    <span class="n">McflirtMocoWorkflow</span><span class="p">,</span>
+    <span class="n">TwoStepMocoWorkflow</span>
+<span class="p">)</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Constants</span>
+<span class="n">AVAILABLE_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;flirt&#39;</span> <span class="p">:</span> <span class="n">FlirtMocoWorkflow</span><span class="p">,</span>
+    <span class="s1">&#39;mcflirt&#39;</span> <span class="p">:</span> <span class="n">McflirtMocoWorkflow</span><span class="p">,</span>
+    <span class="s1">&#39;twostep&#39;</span> <span class="p">:</span> <span class="n">TwoStepMocoWorkflow</span>
+<span class="p">}</span> <span class="c1"># we will build upon this, only tested (and confirmed) modules get added to this tuple</span>
+<span class="n">AVAILABLE_COSTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;flirt&#39;</span> <span class="p">:</span> <span class="p">(</span>
+        <span class="s1">&#39;mutualinfo&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;corratio&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;normcorr&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;normmi&#39;</span>
+        <span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;labeldiff&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;bbr&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;&#39;</span>
+    <span class="p">),</span>
+    <span class="s1">&#39;mcflirt&#39;</span> <span class="p">:</span> <span class="p">(</span>
+        <span class="s1">&#39;mutualinfo&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;woods&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;corratio&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;normcorr&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;normmi&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;leastsq&#39;</span>
+    <span class="p">),</span>
+    <span class="s1">&#39;twostep&#39;</span> <span class="p">:</span> <span class="p">(</span>
+        <span class="s1">&#39;mutualinfo&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;corratio&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;normcorr&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;normmi&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;leastsq&#39;</span>
+    <span class="p">),</span>
+    <span class="s1">&#39;bsplit&#39;</span> <span class="p">:</span> <span class="p">(</span>
+        <span class="s1">&#39;mutualinfo&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;corratio&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;normcorr&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;normmi&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;leastsq&#39;</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Classes</span>
+<div class="viewcode-block" id="MotionCorrection"><a class="viewcode-back" href="../../../cards.html#picnic.cards.motion_correction.MotionCorrection">[docs]</a><span class="k">class</span> <span class="nc">MotionCorrection</span><span class="p">(</span><span class="n">CardBuilder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A class to create the Motion Correction module. Stored here will be </span>
+<span class="sd">    the nodes and connections of the motion correction chosen.</span>
+<span class="sd">    </span>
+<span class="sd">    The public attributes that are important:</span>
+<span class="sd">    none</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">card</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `card` : a Card obj, must contain Tacs parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">=</span> <span class="s1">&#39;motion correction&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">card</span> <span class="o">=</span> <span class="n">card</span>
+        
+        <span class="c1"># check the card syntax</span>
+        <span class="n">CardBuilder</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">card</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;  Checking dataline syntax&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_dataline_syntax</span><span class="p">(</span>
+            <span class="n">expected_lines</span> <span class="o">=</span> <span class="s1">&#39;&gt;0&#39;</span><span class="p">,</span> 
+            <span class="n">expected_in_lines</span> <span class="o">=</span> <span class="s1">&#39;=1&#39;</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># workflow standard attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ct</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;ct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_outflows</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="MotionCorrection.set_outflows"><a class="viewcode-back" href="../../../cards.html#picnic.cards.motion_correction.MotionCorrection.set_outflows">[docs]</a>    <span class="k">def</span> <span class="nf">set_outflows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_directory</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        change the outflows to include the sink directory and change instance</span>
+<span class="sd">        calls, to file-like strings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflows</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;out_file&#39;</span> <span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">sink_directory</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> <span class="s1">&#39;.nii.gz&#39;</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;mats&#39;</span> <span class="p">:</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">sink_directory</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                    <span class="s1">&#39;MAT*&#39;</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outflows</span><span class="p">[</span><span class="s1">&#39;report&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">sink_directory</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">,</span>
+                <span class="s1">&#39;report.html&#39;</span>
+            <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="MotionCorrection.build_workflow"><a class="viewcode-back" href="../../../cards.html#picnic.cards.motion_correction.MotionCorrection.build_workflow">[docs]</a>    <span class="k">def</span> <span class="nf">build_workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_directory</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">optional_parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        build the nipype workflow, this is the core functionality of this class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># if the user has given some custom parameters, use those instead</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_defined_parameters</span><span class="p">(</span><span class="o">**</span><span class="n">optional_parameters</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        
+        <span class="c1"># set the outflows</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sink_directory</span><span class="p">:</span>
+            <span class="n">sink_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        
+        <span class="c1"># Standard reconall workflow goes:</span>
+        <span class="c1">#   1) reorient the 4d image</span>
+        <span class="c1">#   2) do frame base registration</span>
+        <span class="c1">#   3) create a report</span>
+        <span class="k">return</span> <span class="n">AVAILABLE_TYPES</span><span class="p">[</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;_type&#39;</span><span class="p">]](</span>
+            <span class="n">params</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">build_workflow</span><span class="p">(</span><span class="n">sink_directory</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

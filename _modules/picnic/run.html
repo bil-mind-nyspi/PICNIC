@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>picnic.run &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">picnic.run</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for picnic.run</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Run PICNIC by providing an input deck or a group of input decks.</span>
+
+<span class="sd">How To Use This Module</span>
+<span class="sd">======================</span>
+<span class="sd">1. call the `run.py` script directly</span>
+<span class="sd">    &gt;&gt;&gt; python run.py /path/to/input_deck.inp</span>
+
+<span class="sd">2. adding the -d argument will require a csv to create a dox</span>
+
+<span class="sd">3. PICNIC will sequentially loop over the input decks to create and run the</span>
+<span class="sd">    pipelines.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">picnic.input_deck_reader</span> <span class="kn">import</span> <span class="n">read_input_deck</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Constants</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Classes</span>
+<div class="viewcode-block" id="ProcessInputs"><a class="viewcode-back" href="../../run.html#picnic.run.ProcessInputs">[docs]</a><span class="k">class</span> <span class="nc">ProcessInputs</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    an object to process all inputs set up by the argument parser</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `pargs` : a ProcessInputs obj</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># set up attributes to describe the processed inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inps</span> <span class="o">=</span> <span class="n">pargs</span><span class="o">.</span><span class="n">i</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dox</span> <span class="o">=</span> <span class="n">pargs</span><span class="o">.</span><span class="n">dox</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipelines</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># if the user provides items for the dox, run the dox method</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dox</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill_dox</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ProcessInputs.fill_dox"><a class="viewcode-back" href="../../run.html#picnic.run.ProcessInputs.fill_dox">[docs]</a>    <span class="k">def</span> <span class="nf">fill_dox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        use the csv build a dox and create new inputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inps</span> <span class="o">=</span> <span class="n">insert_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dox</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ProcessInputs.initialize_pipelines"><a class="viewcode-back" href="../../run.html#picnic.run.ProcessInputs.initialize_pipelines">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_pipelines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        initialize all the pipelines</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inps</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipelines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">(</span><span class="n">inp</span><span class="p">))</span></div></div>
+
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../run.html#picnic.run.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    an object to hold the important attributes of a completed pipeline. In this</span>
+<span class="sd">    case a pipeline is equivalent to a series of workflows appended on to each</span>
+<span class="sd">    other.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_deck_path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `fn` : a file-like string, the filepath to the input deck</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_deck_path</span> <span class="o">=</span> <span class="n">input_deck_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="n">read_input_deck</span><span class="p">(</span><span class="n">input_deck_path</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_instances</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_workflows</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sink_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    
+<div class="viewcode-block" id="Pipeline.build_workflow"><a class="viewcode-back" href="../../run.html#picnic.run.Pipeline.build_workflow">[docs]</a>    <span class="k">def</span> <span class="nf">build_workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        build the entire pipeline&#39;s workflow</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># start the html</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">Report</span><span class="p">()</span>
+
+        <span class="c1"># find if the user has defined a sink and set the sink path</span>
+        <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">cards</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">card</span><span class="o">.</span><span class="n">cardname</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;sink&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sink_directory</span> <span class="o">=</span> <span class="n">card</span><span class="o">.</span><span class="n">datalines</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># loop over all the cards</span>
+        <span class="k">for</span> <span class="n">card</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="o">.</span><span class="n">cards</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">card</span><span class="o">.</span><span class="n">cardname</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">==</span> <span class="s1">&#39;sink&#39;</span><span class="p">:</span>
+                <span class="c1"># print(card.cardname[1:])</span>
+                <span class="n">instance_name</span> <span class="o">=</span> <span class="n">infer_class_name_from_card_name</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">cardname</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span>
+                    <span class="s1">&#39;picnic.cards.&#39;</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">card</span><span class="o">.</span><span class="n">cardname</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="n">instance</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">instance_name</span><span class="p">)</span>
+
+                <span class="c1"># replace all the instance calls</span>
+                <span class="n">new_datalines</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">dataline</span> <span class="ow">in</span> <span class="n">card</span><span class="o">.</span><span class="n">datalines</span><span class="p">:</span>
+                    <span class="n">new_dataline</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">dataline</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">):</span>
+                            <span class="c1"># set up a control flow to parse instance calls</span>
+                            <span class="n">splitter</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splitter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_instances</span><span class="p">[</span><span class="n">splitter</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">outflows</span><span class="p">[</span><span class="n">splitter</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Error: The outflow &quot;&#39;</span> <span class="o">+</span> <span class="n">splitter</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot; is not available for instance &quot;&#39;</span> <span class="o">+</span> <span class="n">splitter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">splitter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline_instances</span><span class="p">[</span><span class="n">splitter</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">outflows</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Error: Syntax issue with data line &quot;&#39;</span> <span class="o">+</span> <span class="n">data</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+
+                        <span class="n">new_dataline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <span class="n">new_datalines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_dataline</span><span class="p">)</span>
+                <span class="n">card</span><span class="o">.</span><span class="n">datalines</span> <span class="o">=</span> <span class="n">new_datalines</span>
+
+                <span class="c1"># initialize, build the workflow and run it</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">card</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_instances</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="p">(</span><span class="n">card</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_instances</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_outflows</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink_directory</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_workflows</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">instance</span><span class="p">(</span><span class="n">card</span><span class="p">)</span><span class="o">.</span><span class="n">build_workflow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink_directory</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_workflows</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">integrate_report</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_instances</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">outflows</span><span class="p">[</span><span class="s1">&#39;report&#39;</span><span class="p">],</span>
+                    <span class="n">name</span>
+                <span class="p">)</span>
+
+        <span class="c1"># finish building out the html and saving it</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sink_directory</span><span class="p">,</span> <span class="s2">&quot;full_report.html&quot;</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Report"><a class="viewcode-back" href="../../run.html#picnic.run.Report">[docs]</a><span class="k">class</span> <span class="nc">Report</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    an object to collect lines from sub-reports into an html summary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Initialize the report with a title and empty body. &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_lines</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;  &lt;title&gt;PICNIC Summary Report&lt;/title&gt;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_lines</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script_lines</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Report.integrate_report"><a class="viewcode-back" href="../../run.html#picnic.run.Report.integrate_report">[docs]</a>    <span class="k">def</span> <span class="nf">integrate_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">individual_report</span><span class="p">,</span> <span class="n">instance_name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Read from sub_report and integrate it into this summary.</span>
+
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `individual_report`: a subreport from one of many workflows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># A workflow has something to add to the global report.</span>
+        <span class="n">include_in_head</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">include_in_body</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">include_in_script</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">individual_report</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&lt;body&gt;&#39;</span><span class="p">:</span>
+                    <span class="n">include_in_body</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&lt;head&gt;&#39;</span><span class="p">:</span>
+                    <span class="n">include_in_head</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&lt;/body&gt;&#39;</span><span class="p">:</span>
+                    <span class="n">include_in_body</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&lt;/head&gt;&#39;</span><span class="p">:</span>
+                    <span class="n">include_in_head</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">elif</span> <span class="s2">&quot;&lt;script&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">script_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="s2">&quot;&lt;/script&gt;&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="n">include_in_script</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># more script to come</span>
+                <span class="k">elif</span> <span class="s2">&quot;&lt;/script&gt;&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">script_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="n">include_in_script</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># got the last script line</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">include_in_script</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">script_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">include_in_body</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                                <span class="s2">&quot;src=</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span>
+                                <span class="sa">f</span><span class="s2">&quot;src=</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">instance_name</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">include_in_head</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;&lt;title&gt;&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">head_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Report.write_html"><a class="viewcode-back" href="../../run.html#picnic.run.Report.write_html">[docs]</a>    <span class="k">def</span> <span class="nf">write_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Write out the summary report. &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">html_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="c1"># Use modern (as of 2025) html5</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;!DOCTYPE html&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;html lang=&quot;en&quot;&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;head&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &lt;meta charset=&quot;UTF-8&quot;&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &lt;meta name = &quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head_lines</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;/head&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;body&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body_lines</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">script_lines</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;/body&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&lt;/html&gt;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Functions</span>
+<div class="viewcode-block" id="create_parser"><a class="viewcode-back" href="../../run.html#picnic.run.create_parser">[docs]</a><span class="k">def</span> <span class="nf">create_parser</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    use argparse to correctly parse the arguments supplied by the user</span>
+
+<span class="sd">    :Return:</span>
+<span class="sd">      -. an ArgumentParser obj</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;filepath to the input deck&#39;</span><span class="p">)</span>
+    <span class="n">_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-d&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;--dox&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;provide text-readable table and an unfulfilled parameterized &#39;</span>
+             <span class="s1">&#39;input deck to create a Design Of Experiments&#39;</span>
+    <span class="p">)</span>
+    <span class="n">_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--plot-regional-tacs&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;If True, an additional TACs plot with a smaller subset of &#39;</span>
+             <span class="s1">&#39;regions will be created and included in the report.&#39;</span>
+    <span class="p">)</span>
+    <span class="n">_parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;If True, additional information will be printed to the terminal.&#39;</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_parser</span></div>
+
+
+<div class="viewcode-block" id="infer_class_name_from_card_name"><a class="viewcode-back" href="../../run.html#picnic.run.infer_class_name_from_card_name">[docs]</a><span class="k">def</span> <span class="nf">infer_class_name_from_card_name</span><span class="p">(</span><span class="n">card_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns a string of the suspected class name by giving a card name. This</span>
+<span class="sd">    assumes all spaces will be removed, the first word will be capitalized and</span>
+<span class="sd">    CamelCase will be used for subsequent words.</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">      -. `card_name` : a string, the name of the card</span>
+
+<span class="sd">    :Return:</span>
+<span class="sd">      -.  a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">card_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)])</span></div>
+
+
+<div class="viewcode-block" id="insert_parameters"><a class="viewcode-back" href="../../run.html#picnic.run.insert_parameters">[docs]</a><span class="k">def</span> <span class="nf">insert_parameters</span><span class="p">(</span><span class="n">inps</span><span class="p">,</span> <span class="n">dox_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    creates new input decks from a list of template inps and a test readable</span>
+<span class="sd">    dox file. This function will iterate over the template inps and add new</span>
+<span class="sd">    parameters for each new run in the dox.</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">      -. `inps`: a list, the inp templates</span>
+<span class="sd">      -. `dox_file`: a file-like str, the text readable table</span>
+
+<span class="sd">    :Return:</span>
+<span class="sd">      -. a list, of newly created input decks</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read in the dox file</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dox_file</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">number_of_runs</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Loop over each input deck provided</span>
+    <span class="n">new_inps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">inps</span><span class="p">:</span>
+        <span class="n">all_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">parameter_flag</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="c1"># creating a flag system for the *parameter keyword</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">):</span>
+                        <span class="n">parameter_flag</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*parameter&#39;</span><span class="p">):</span>
+                            <span class="n">parameter_flag</span> <span class="o">=</span> <span class="kc">True</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">parameter_flag</span><span class="p">:</span>
+                        <span class="n">all_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+                    <span class="c1"># because *parameter is special and it is how we are</span>
+                    <span class="c1">#  creating new input decks we are going to isolate</span>
+                    <span class="c1">#  all these lines and set them aside</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*parameter&#39;</span><span class="p">):</span>
+                            <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)]</span>
+                            <span class="n">parameters</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="c1"># now that we&#39;ve read the entire input deck, we want to add in the new</span>
+        <span class="c1">#  parameters as described by the dox file</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">run</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="n">new_parameters</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+                <span class="n">new_parameters</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="n">run</span><span class="p">]</span>
+
+            <span class="c1"># write out the new input deck with the additional parameters</span>
+            <span class="n">new_inp</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">inp</span><span class="p">))[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;run&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">number_of_runs</span><span class="p">)))</span> <span class="o">+</span> <span class="s1">&#39;.inp&#39;</span>
+            <span class="p">])</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">new_inp</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">g</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">all_lines</span><span class="p">:</span>
+                    <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*start&#39;</span><span class="p">):</span>
+                        <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;*parameter</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="n">_</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; = &#39;</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">new_inps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_inp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_inps</span></div>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Main</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># parse the arguments</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">create_parser</span><span class="p">()</span>
+    <span class="n">pargs</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">arginputs</span> <span class="o">=</span> <span class="n">ProcessInputs</span><span class="p">(</span><span class="n">pargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pargs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Environment variables:&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  &#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;: &#39;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create the pipelines</span>
+    <span class="n">pipelines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">failed_runs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="n">arginputs</span><span class="o">.</span><span class="n">inps</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pargs</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;inp&#39;: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+            <span class="n">pipeline</span><span class="o">.</span><span class="n">build_workflow</span><span class="p">()</span>
+            <span class="n">pipelines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pipeline</span><span class="p">)</span>
+        <span class="c1"># create a running tally of failed runs</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">failed_runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">failed_runs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Failed runs:</span><span class="se">\n\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">failed_runs</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

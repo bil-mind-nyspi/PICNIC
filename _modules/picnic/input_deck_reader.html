@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>picnic.input_deck_reader &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">picnic.input_deck_reader</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for picnic.input_deck_reader</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">reraise</span>
+
+<span class="kn">from</span> <span class="nn">picnic.cards</span> <span class="kn">import</span> <span class="n">get_path_to_json</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Constants</span>
+<span class="n">INPUT_DECK_EXTENSION</span> <span class="o">=</span> <span class="s1">&#39;.inp&#39;</span>
+<span class="n">commenter</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Classes</span>
+<span class="k">class</span> <span class="nc">InputDeck</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Input deck reader</span>
+<span class="sd">    </span>
+<span class="sd">    InputDeck expects a filename string or a file object.</span>
+<span class="sd">    </span>
+<span class="sd">    This will read in an input deck file, check its syntax and create an </span>
+<span class="sd">    ordered dictionary of its star cards. This dictionary is the spine of the </span>
+<span class="sd">    pipeline. It defines the optional parameters and data lines for each star </span>
+<span class="sd">    card controlling which operations the pipeline will do.</span>
+<span class="sd">    </span>
+<span class="sd">    The public attributes that are important:</span>
+<span class="sd">        cards - a list of all the cards as Card obj; [Card, Card]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; inp = InputDeck(&#39;example.inp&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `fn` : a file-like str or File obj, the input deck file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="k">try</span><span class="p">:</span> <span class="c1"># test if we are getting a File or str</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cards</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_inp</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_inp</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">check_inp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        check that the input deck is an inp file type and that it exists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;  Checking the file location&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_file_extension</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">INPUT_DECK_EXTENSION</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;  &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39; is not a &#39;</span> <span class="o">+</span> <span class="n">INPUT_DECK_EXTENSION</span> <span class="o">+</span> <span class="s1">&#39; file type, this is an unsupported file format input decks&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_file_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;  Error: The file &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39; was not found.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: The file &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39; was not found.&#39;</span><span class="p">)</span>
+            
+            
+    <span class="k">def</span> <span class="nf">read_inp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        read in the input deck and assign data for all the star keywords</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  Opening file &#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">user_defined_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># loop over all the data, start reading with *start</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*start&#39;</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reader:    *start&#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span> <span class="c1"># python iterator will continue its iteration until consumed</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">line</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">user_defined_parameters</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR while reading the input deck at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">: &quot;</span>
+                                  <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&#39;</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39; is missing a parameter. &quot;</span>
+                                  <span class="sa">f</span><span class="s2">&quot;Available parameters are: </span><span class="si">{</span><span class="n">user_defined_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">.&quot;</span>
+                                  <span class="sa">f</span><span class="s2">&quot;Did you forget to define a variable?&quot;</span><span class="p">)</span>
+                            <span class="k">raise</span>
+                        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*end&#39;</span><span class="p">):</span> <span class="c1"># stop reading and exit method at *end</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reader:    *end</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                            <span class="k">return</span>
+                        <span class="k">elif</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span> <span class="c1"># if the line is empty, skip it</span>
+                            <span class="k">continue</span>
+                        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">commenter</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                            
+                        <span class="c1"># *parameter card is a special card. It always goes at </span>
+                        <span class="c1">#   the beginning and it has special rules</span>
+                        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*parameter&#39;</span><span class="p">):</span>
+                            <span class="n">parameter_lines</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span> <span class="c1"># same deal, continue the iterator until we break</span>
+                                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">):</span>
+                                    <span class="n">parameter_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="c1"># use exec to run the psudo python code for parameters</span>
+                                    <span class="n">user_defined_parameters</span> <span class="o">=</span> <span class="n">read_parameter_card</span><span class="p">(</span><span class="n">parameter_lines</span><span class="p">)</span>
+                                    
+                                    <span class="c1"># I personally don&#39;t like this, but I can&#39;t think of a better way to</span>
+                                    <span class="c1">#   exit the iterator. Load the first card after *parameter</span>
+                                    <span class="k">try</span><span class="p">:</span>
+                                        <span class="n">line</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">Template</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">substitute</span><span class="p">(</span><span class="n">user_defined_parameters</span><span class="p">)</span>
+                                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR while reading the input deck at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">: &quot;</span>
+                                              <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&#39;</span><span class="si">{</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="si">}</span><span class="s2">&#39; is missing a parameter. &quot;</span>
+                                              <span class="sa">f</span><span class="s2">&quot;Available parameters are: </span><span class="si">{</span><span class="n">user_defined_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">.&quot;</span>
+                                              <span class="sa">f</span><span class="s2">&quot;Did you forget to define a variable?&quot;</span><span class="p">)</span>
+                                        <span class="k">raise</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reader:    &#39;</span> <span class="o">+</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span><span class="si">}</span><span class="s2"> items&quot;</span><span class="p">)</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Card</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">itm</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">itm</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]))</span>
+                                    <span class="k">break</span>
+                                
+                        <span class="c1"># create a Card obj for every * keyword, even the ones that are not supported</span>
+                        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reader:    &#39;</span> <span class="o">+</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Card</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">itm</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">itm</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]))</span>
+                                                                        
+                        <span class="c1"># if the line does not start with * nor is blank, assume it is a data line</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Reader:      &#39;</span><span class="o">+</span><span class="n">line</span><span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_dataline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        
+        <span class="c1"># if we get to this point the reader has not found either a *start or *end, exit the pipeline</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;  Error: Input deck does not contain the either the keyword &quot;*start&quot; or &quot;*end&quot;&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Input deck does not contain the either the keyword &quot;*start&quot; or &quot;*end&quot;&#39;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">add_card</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cardname</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">datalines</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; A public option for adding cards without a separate file</span>
+<span class="sd">        </span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `cardname` : str, the card&#39;s name as a string; \*pet</span>
+<span class="sd">          -. `parameters` : a tuple of strings or a single dict, the optional</span>
+<span class="sd">            parameters for the card; (&#39;para_key=para_val&#39;, &#39;para_key=para_val&#39;)</span>
+<span class="sd">            or {&#39;para_key&#39;:&#39;para_val&#39;, &#39;para_key&#39;:&#39;para_val&#39;, ...}</span>
+<span class="sd">          -. `line` : a list split by &#39;,&#39; or a str, the data line is where the</span>
+<span class="sd">            user provided information is dictated in the input deck.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Card</span><span class="p">(</span><span class="n">cardname</span><span class="p">,</span> <span class="n">parameters</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">dataline</span> <span class="ow">in</span> <span class="n">datalines</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cards</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_dataline</span> <span class="o">=</span> <span class="n">dataline</span>
+
+
+<div class="viewcode-block" id="Card"><a class="viewcode-back" href="../../cards.html#picnic.input_deck_reader.Card">[docs]</a><span class="k">class</span> <span class="nc">Card</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An object storing all the relevant information for &#39;\*&#39; cards</span>
+<span class="sd">    </span>
+<span class="sd">    Card expects a name and a tuple of parameters. The tuple can be empty</span>
+<span class="sd">    </span>
+<span class="sd">    This will add the parameters and data lines for the card. It will check </span>
+<span class="sd">    the syntax of the optional parameters and data lines. It will also read </span>
+<span class="sd">    in the defaults from a .json file (keyword.json) and override the </span>
+<span class="sd">    default where applicable.</span>
+<span class="sd">    </span>
+<span class="sd">    The public attributes that are important:</span>
+<span class="sd">        :cardname: the name of the card; &#39;\*image&#39;</span>
+<span class="sd">        :parameters: a dictionary of the parameters; {&#39;para_key&#39;: &#39;para_val&#39;}</span>
+<span class="sd">        :datalines: a nested list of the data lines for each card;</span>
+<span class="sd">                    [[&#39;filepath&#39;],[&#39;arg 1&#39;, &#39;arg 2&#39;]]</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; card = Card(*line.lower().split(&#39;,&#39;))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cardname</span><span class="p">,</span> <span class="o">*</span><span class="n">parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">            -. `cardname` : str, the name of the card; *pet</span>
+<span class="sd">            -. `parameters` : an unpacked tuple, packed tuple, list or single</span>
+<span class="sd">                dictionary the optional parameters for the card;</span>
+<span class="sd">                &#39;para_key=para_val&#39;, &#39;para_key=para_val&#39;, ... or</span>
+<span class="sd">                (&#39;para_key=para_val&#39;, &#39;para_key=para_val&#39;, ...) or</span>
+<span class="sd">                [&#39;para_key=para_val&#39;, &#39;para_key=para_val&#39;, ...] or</span>
+<span class="sd">                {&#39;para_key&#39;:&#39;para_val&#39;, &#39;para_key&#39;:&#39;para_val&#39;, ...}</span>
+<span class="sd">                the optional parameter is where the user defines how the *card</span>
+<span class="sd">                should expect to behave or what its attributes may look like</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">=</span> <span class="n">cardname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">parameters</span>
+        
+        <span class="c1"># load in the default parameters, then overwrite the with the user </span>
+        <span class="c1">#  defined parameters</span>
+        <span class="n">default_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_defaults</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_parameter_syntax</span><span class="p">(</span><span class="n">default_parameters</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">default_parameters</span><span class="p">),</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Error: The optional parameter &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">default_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()))[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; is not supported for the card &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cardname</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># initialize the dataline list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datalines</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
+
+    <span class="nd">@parameters</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_paras</span><span class="p">):</span>
+        <span class="c1"># change the data type to a dictionary containing para_key: para_value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">all_paras</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">all_paras</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_paras</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c1"># we enter this exception because tuple and list do not have a </span>
+                <span class="c1">#  split method, this will happen when the user passes a list </span>
+                <span class="c1">#  or tuple into Card and the initialization packs it</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_paras</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="c1"># we enter this exception when there is no &#39;=&#39; to split the str</span>
+                <span class="k">raise</span> <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Unexpected syntax for the optional parameters for &quot;&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">all_paras</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="n">all_paras</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Error: Unexpected data type passed to Card.parameters must be a tuple or dict&#39;</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">_load_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set aside in a method so we can change the json if necessary</span>
+
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `defaults_path` : file-like str, path to a json file where the</span>
+<span class="sd">            default values are stored</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Load the json</span>
+        <span class="n">json_path</span> <span class="o">=</span> <span class="n">get_path_to_json</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cardname</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># if the card doesn&#39;t have a type or the user doesn&#39;t provide one, use</span>
+        <span class="c1">#  the first option in the json</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="n">d</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># if for some reason we made it through that try statement, default to</span>
+        <span class="c1">#  empty parameters</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Card.check_parameter_syntax"><a class="viewcode-back" href="../../cards.html#picnic.input_deck_reader.Card.check_parameter_syntax">[docs]</a>    <span class="k">def</span> <span class="nf">check_parameter_syntax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check all the parameters associated with the module</span>
+<span class="sd">        </span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `default_parameters` : dict, the default parameters associated to</span>
+<span class="sd">            the type defined by the user</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_parameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># loop over all the default parameters</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">default_parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">default_value</span> <span class="o">=</span> <span class="n">default_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="c1"># if the user does not give a parameter for the given card, set it</span>
+            <span class="c1">#  to the default</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">actual_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">actual_value</span> <span class="o">=</span> <span class="n">default_value</span>
+
+            <span class="c1"># if the default value is int, make sure the value given is int</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">new_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">actual_value</span><span class="p">)</span>
+                <span class="c1"># throw error if not an int</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Parameter `&#39;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;` from `&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">+</span> <span class="s1">&#39;` expects an integer&#39;</span><span class="p">)</span>
+
+            <span class="c1"># if the default value is True/False, make the given value boolean</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">actual_value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="s1">&#39;no&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">):</span>
+                        <span class="n">new_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">actual_value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Parameter `&#39;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;` from `&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">+</span> <span class="s1">&#39;` expects a boolean&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">new_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">actual_value</span><span class="p">)</span>
+
+            <span class="c1"># if the default is a list of available options, make sure the</span>
+            <span class="c1">#  given is one of them</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">actual_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">new_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">actual_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">actual_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">actual_value</span> <span class="ow">in</span> <span class="n">default_value</span><span class="p">:</span>
+                        <span class="n">new_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">actual_value</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Parameter `&#39;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;` from `&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">+</span> <span class="s1">&#39;` must be one of the options: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">default_value</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Parameter `&#39;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;` from `&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span> <span class="o">+</span> <span class="s1">&#39;` must be one of the options: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">default_value</span><span class="p">))</span>
+
+            <span class="c1"># this control is entered if it is a string (like name or desc)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">actual_value</span>
+        <span class="k">return</span> <span class="n">new_parameters</span></div>
+
+<div class="viewcode-block" id="Card.add_dataline"><a class="viewcode-back" href="../../cards.html#picnic.input_deck_reader.Card.add_dataline">[docs]</a>    <span class="k">def</span> <span class="nf">add_dataline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add to the datalines</span>
+<span class="sd">        </span>
+<span class="sd">        :Parameters:</span>
+<span class="sd">          -. `line` : a list split by &#39;,&#39; or a str, the data line is where the</span>
+<span class="sd">            user provided information is dictated in the input deck.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datalines</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">itm</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">itm</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)])</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datalines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Unexpected data type when setting dataline for card &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">datalines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span>
+
+    <span class="nd">@datalines</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">datalines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="c1"># confirm the data type is a list, and if not force it to be one</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span> <span class="o">=</span><span class="p">[[</span><span class="n">itm</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">itm</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)]]</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="c1"># if the user tries to initalize datalines with multiple datalines</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_datalines</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">itm</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">itm</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InputDeckSyntaxError</span><span class="p">(</span><span class="s1">&#39;Error: Unexpected data type when setting dataline for card &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardname</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">InputDeckSyntaxError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom error to trap input deck specific errors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Functions</span>
+<span class="k">def</span> <span class="nf">check_file_extension</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">extension</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that the file given is the correct extension</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">      -. `filename` : str, the input deck file</span>
+<span class="sd">      -. `extension` : str, the file extension type (most likely &#39;.inp&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">extension</span>
+
+
+<span class="k">def</span> <span class="nf">check_file_exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that the file exists where the user thinks it does</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">      -. `filename` : str, the input deck file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">read_parameter_card</span><span class="p">(</span><span class="n">all_the_parameter_lines</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A function built to read and execute the \*parameter keyword.</span>
+<span class="sd">    This has to be built in a local space outside the typical object structure to</span>
+<span class="sd">    mitigate some of the danger of using the exec command.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create a dictionary to hold the parameters</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># loop over all the parameter lines, determining validity</span>
+    <span class="n">valid_lines</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">all_the_parameter_lines</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">commenter</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="c1"># Execute those that pass the test, assigning values to parameters</span>
+    <span class="k">if</span> <span class="n">valid_lines</span><span class="p">:</span>
+        <span class="n">code_block</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">valid_lines</span><span class="p">)</span>
+        <span class="c1"># With __builtins__, variables can be assigned, but dangerous code cannot be run</span>
+        <span class="n">exec</span><span class="p">(</span><span class="n">code_block</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;__builtins__&quot;</span><span class="p">:</span> <span class="p">{}},</span> <span class="n">parameters</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parameters</span>
+
+<span class="k">def</span> <span class="nf">read_input_deck</span><span class="p">(</span><span class="n">input_deck</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A function that will call the InputDeck class and fill it given a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">InputDeck</span><span class="p">(</span><span class="n">input_deck</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">make_card</span><span class="p">(</span><span class="n">cardname</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">datalines</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    create a Card class on the fly</span>
+
+<span class="sd">    :Parameters:</span>
+<span class="sd">      -. `cardname` : str, the card used, ex: *import, *reconall</span>
+<span class="sd">      -. `parameters` : list, dict or tuple, the card parameters</span>
+<span class="sd">      -. `datalines` : list of str, the instance or file-like str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># make sure the keyword starts with a star indicator</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cardname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">):</span>
+        <span class="n">cardname</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span> <span class="o">+</span> <span class="n">cardname</span>
+    
+    <span class="c1"># if there are user defined parameters, load those in</span>
+    <span class="k">if</span> <span class="n">parameters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">card</span> <span class="o">=</span> <span class="n">Card</span><span class="p">(</span><span class="n">cardname</span><span class="p">,</span> <span class="o">*</span><span class="n">parameters</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">card</span> <span class="o">=</span> <span class="n">Card</span><span class="p">(</span><span class="n">cardname</span><span class="p">)</span>
+    
+    <span class="c1"># add the datalines</span>
+    <span class="k">if</span> <span class="n">datalines</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">datalines</span><span class="p">:</span>
+            <span class="n">card</span><span class="o">.</span><span class="n">add_dataline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">card</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Main</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># assume the user is passing in an inp</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error: No input deck file found&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">read_input_deck</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
