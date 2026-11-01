@@ -98,15 +98,15 @@ brain PET studies, and its design may allow future extension to preprocessing of
 data from imaging modalities other than PET. The source code for PICNIC is
 available at the following link: https://github.com/bil-mind-nyspi/PICNIC.
 
-# Statement of need
+# Statement of Need
 
 PET is a valuable tool used in research and clinical settings to noninvasively image the human brain _in vivo_ and can quantify up to nanomolar levels of specific components of brain metabolic and neurochemical processes. Rigorous preprocessing of raw PET data [@Norgaard2019Optimization] is key to obtaining accurate quantification. Although software packages exist that execute each component of brain PET pre-processing, and several of these have even been combined into pipelines, no software exists to support a fully open-source, customizable pre-processing pipeline from start through human quality control (QC).
 
-# State of the field
+# State of the Field
 
 A variety of software exists for preprocessing brain PET data, but none offer PICNIC's strengths in a single package. PMOD [@Mikolajczyk1998PMOD] requires purchase of a license. Both PMOD and CapAIBL [@Bourgeat2015CapAIBL] are closed-source. MIAKAT [@Gunn2016MIAKAT] and MAGIA [@Karjalainen2020MAGIA] are open-source, but depend on MATLAB, requiring a purchased license. Clinica [@Routier2021Clinica] and Neuropypes [@Savio2017Neuropypes] both depend on SPM, which requires a closed-source MATLAB runtime. NiftyPET [@Markiewicz2017NiftyPET] and PETsurfer [@Greve2014Cortical; @Greve2016PVC] contain useful PET preprocessing tools, but are not complete pipelines. APPIAN [@Funck2018APPIAN] is open-source and based on nipype [@gorgolewski_2016_50186], like PICNIC, but uses BEaST brain extraction and ANIMAL segmentation tools, which would create different regions from the commonly used FreeSurfer individualized regions. Tools from PETsurfer are used in PETPrep [@Norgaard2026petprep] and PETSurfer-bids [@Wighton2026petsurferbids], which uses PETPrep output for additional analyses. PETPrep has been developed concurrently with PICNIC, uses nipype to manage steps, and is a reasonable alternative for standard PET preprocessing objectives. PICNIC offers fully open-source and complete pre-processing pipelines, with SPM available but not required, standard FreeSurfer segmentation, and the added ability to customize or extend the pipeline by altering the input deck. Moreover, PICNIC writes an HTML-based report with interactive image viewers, images, and videos to guide QC.
 
-# Software design
+# Software Design
 
 PICNIC was written with Python3 and uses nipype to orchestrate the execution of well-supported external neuroimaging utilities like ANTs [@Avants2008Symmetric], AFNI [@Cox1996AFNI], Connectome Workbench [@Marcus2011HCPCW], FreeSurfer, PETPVC [@Thomas2016PETPVC], and FSL. PICNIC is intended to be run as a [Docker container](https://hub.docker.com/repository/docker/mfschmidt/picnic) to provide all dependencies pre-built in a working environment. However, PICNIC and its dependencies can alternatively be installed and run locally. PICNIC also implements the interactive Papaya neuroimaging viewer [@papaya_viewer] alongside prepared images and video within its HTML reports to guide QC, supporting thorough manual review.
 
