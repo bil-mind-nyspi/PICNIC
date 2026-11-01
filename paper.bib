@@ -1,17 +1,138 @@
+% ---------------------------------------------------------------------------
+% Methods, standards, and software dependencies
+% ---------------------------------------------------------------------------
+
 @article{Norgaard2019Optimization,
-  author  = {Norgaard, M. and Ganz, M. and Svarer, C. and others},
-  title   = {{Optimization of preprocessing strategies in Positron Emission Tomography (PET) neuroimaging: A [(11)C]DASB PET study}},
-  journal = {Neuroimage},
+  author  = {N{\o}rgaard, Martin and Ganz, Melanie and Svarer, Claus and others},
+  title   = {Optimization of preprocessing strategies in {Positron Emission Tomography} ({PET}) neuroimaging: A [{$^{11}$C}]{DASB} {PET} study},
+  journal = {NeuroImage},
   year    = {2019},
   volume  = {199},
-  pages   = {466-479},
-  month   = {oct},
+  pages   = {466--479},
+  month   = oct,
   doi     = {10.1016/j.neuroimage.2019.05.055}
 }
 
-@article{Karjalainen2020Magia,
-  author  = {Karjalainen, T. and Tuisku, J. and Santavirta, S. and others},
-  title   = {{Magia: Robust Automated Image Processing and Kinetic Modeling Toolbox for PET Neuroinformatics}},
+@article{Knudsen2020Guidelines,
+  author  = {Knudsen, Gitte M. and Ganz, Melanie and Appelhoff, Stefan and others},
+  title   = {Guidelines for the content and format of {PET} brain data in publications and archives: A consensus paper},
+  journal = {Journal of Cerebral Blood Flow \& Metabolism},
+  year    = {2020},
+  volume  = {40},
+  number  = {8},
+  pages   = {1576--1585},
+  month   = aug,
+  doi     = {10.1177/0271678X20905433}
+}
+
+@article{Avants2008Symmetric,
+  author  = {Avants, B. B. and Epstein, C. L. and Grossman, M. and Gee, J. C.},
+  title   = {Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain},
+  journal = {Medical Image Analysis},
+  year    = {2008},
+  volume  = {12},
+  number  = {1},
+  pages   = {26--41},
+  month   = feb,
+  doi     = {10.1016/j.media.2007.06.004}
+}
+
+@article{Cox1996AFNI,
+  author  = {Cox, R. W.},
+  title   = {{AFNI}: software for analysis and visualization of functional magnetic resonance neuroimages},
+  journal = {Computers and Biomedical Research},
+  year    = {1996},
+  volume  = {29},
+  number  = {3},
+  pages   = {162--173},
+  month   = jun,
+  doi     = {10.1006/cbmr.1996.0014}
+}
+
+@article{Jenkinson2012Fsl,
+  author  = {Jenkinson, M. and Beckmann, C. F. and Behrens, T. E. and Woolrich, M. W. and Smith, S. M.},
+  title   = {{FSL}},
+  journal = {NeuroImage},
+  year    = {2012},
+  volume  = {62},
+  number  = {2},
+  pages   = {782--790},
+  month   = aug,
+  doi     = {10.1016/j.neuroimage.2011.09.015}
+}
+
+@article{Fischl2012FreeSurfer,
+  author  = {Fischl, B.},
+  title   = {{FreeSurfer}},
+  journal = {NeuroImage},
+  year    = {2012},
+  volume  = {62},
+  number  = {2},
+  pages   = {774--781},
+  month   = aug,
+  doi     = {10.1016/j.neuroimage.2012.01.021}
+}
+
+@article{Li2016DICOM,
+  author  = {Li, X. and Morgan, P. S. and Ashburner, J. and Smith, J. and Rorden, C.},
+  title   = {The first step for neuroimaging data analysis: {DICOM} to {NIfTI} conversion},
+  journal = {Journal of Neuroscience Methods},
+  year    = {2016},
+  volume  = {264},
+  pages   = {47--56},
+  month   = may,
+  doi     = {10.1016/j.jneumeth.2016.03.001}
+}
+
+@misc{SPM12,
+  author = {{Functional Imaging Laboratory}},
+  title  = {Statistical Parametric Mapping, version 12 ({SPM12})},
+  year   = {2020},
+  url    = {https://www.fil.ion.ucl.ac.uk/spm/software/spm12/}
+}
+
+% ---------------------------------------------------------------------------
+% State of the field: other PET preprocessing software
+% ---------------------------------------------------------------------------
+
+@article{Mikolajczyk1998PMOD,
+  author  = {Mikolajczyk, K. and Szabatin, M. and Rudnicki, P. and Grodzki, M. and Burger, C.},
+  title   = {A {JAVA} environment for medical image data analysis: initial application for brain {PET} quantitation},
+  journal = {Medical Informatics},
+  year    = {1998},
+  volume  = {23},
+  number  = {3},
+  pages   = {207--214},
+  doi     = {10.3109/14639239809001400}
+}
+
+@inproceedings{Bourgeat2015CapAIBL,
+  author    = {Bourgeat, Pierrick and Dor{\'e}, Vincent and Fripp, Jurgen and Villemagne, Victor L. and Rowe, Chris C. and Salvado, Olivier},
+  title     = {Computational analysis of {PET} by {AIBL} ({CapAIBL}): a cloud-based processing pipeline for the quantification of {PET} images},
+  booktitle = {Medical Imaging 2015: Image Processing},
+  series    = {Proceedings of SPIE},
+  volume    = {9413},
+  pages     = {94132V},
+  year      = {2015},
+  month     = mar,
+  doi       = {10.1117/12.2082492}
+}
+
+@article{Gunn2016MIAKAT,
+  author  = {Gunn, Roger and Coello, Christopher and Searle, Graham},
+  title   = {Molecular Imaging And Kinetic Analysis Toolbox ({MIAKAT}) -- A quantitative software package for the analysis of {PET} neuroimaging data},
+  journal = {Journal of Nuclear Medicine},
+  year    = {2016},
+  volume  = {57},
+  number  = {Supplement 2},
+  pages   = {1928},
+  month   = may,
+  url     = {https://jnm.snmjournals.org/content/57/supplement_2/1928}
+}
+
+@article{Karjalainen2020MAGIA,
+  author  = {Karjalainen, Tomi and Tuisku, Jouni and Santavirta, Severi and others},
+  title   = {{Magia}: Robust automated image processing and kinetic modeling toolbox for {PET} neuroinformatics},
   journal = {Frontiers in Neuroinformatics},
   year    = {2020},
   volume  = {14},
@@ -19,19 +140,9 @@
   doi     = {10.3389/fninf.2020.00003}
 }
 
-@article{Funck2018APPIAN,
-  author  = {Funck, T. and Larcher, K. and Toussaint, P. J. and Evans, A. C. and Thiel, A.},
-  title   = {{APPIAN: Automated Pipeline for PET Image Analysis}},
-  journal = {Frontiers in Neuroinformatics},
-  year    = {2018},
-  volume  = {12},
-  pages   = {64},
-  doi     = {10.3389/fninf.2018.00064}
-}
-
 @article{Routier2021Clinica,
-  author  = {Routier, A. and Burgos, N. and Diaz, M. and others},
-  title   = {{Clinica: An Open-Source Software Platform for Reproducible Clinical Neuroscience Studies}},
+  author  = {Routier, Alexandre and Burgos, Ninon and D{\'i}az, Mauricio and others},
+  title   = {{Clinica}: An open-source software platform for reproducible clinical neuroscience studies},
   journal = {Frontiers in Neuroinformatics},
   year    = {2021},
   volume  = {15},
@@ -39,169 +150,387 @@
   doi     = {10.3389/fninf.2021.689675}
 }
 
-@article{Knudsen2020Guidelines,
-  author  = {Knudsen, G. M. and Ganz, M. and Appelhoff, S. and others},
-  title   = {{Guidelines for the content and format of PET brain data in publications and archives: A consensus paper}},
-  journal = {Journal of Cerebral Blood Flow \& Metabolism},
-  year    = {2020},
-  volume  = {40},
-  number  = {8},
-  pages   = {1576-1585},
-  month   = {aug},
-  doi     = {10.1177/0271678X20905433}
+@article{Savio2017Neuropypes,
+  author  = {Savio, Alexandre M. and Schutte, Michael and Gra{\~n}a, Manuel and Yakushev, Igor},
+  title   = {{Neuropypes}: Workflows for processing multimodal neuroimaging data},
+  journal = {Frontiers in Neuroinformatics},
+  year    = {2017},
+  volume  = {11},
+  pages   = {25},
+  month   = apr,
+  doi     = {10.3389/fninf.2017.00025}
 }
 
-@article{Avants2008Symmetric,
-  author  = {Avants, B. B. and Epstein, C. L. and Grossman, M. and Gee, J. C.},
-  title   = {{Symmetric diffeomorphic image registration with cross-correlation: evaluating automated labeling of elderly and neurodegenerative brain}},
-  journal = {Medical Image Analysis},
-  year    = {2008},
-  volume  = {12},
+@article{Markiewicz2017NiftyPET,
+  author  = {Markiewicz, Pawel J. and Ehrhardt, Matthias J. and Erlandsson, Kjell and Noonan, Philip J. and Barnes, Anna and Schott, Jonathan M. and Atkinson, David and Arridge, Simon R. and Hutton, Brian F. and Ourselin, Sebastien},
+  title   = {{NiftyPET}: a high-throughput software platform for high quantitative accuracy and precision {PET} imaging and analysis},
+  journal = {Neuroinformatics},
+  year    = {2018},
+  volume  = {16},
   number  = {1},
-  pages   = {26-41},
-  month   = {feb},
-  doi     = {10.1016/j.media.2007.06.004}
+  pages   = {95--115},
+  doi     = {10.1007/s12021-017-9352-y}
 }
 
-@article{Cox1996AFNI,
-  author  = {Cox, R. W.},
-  title   = {{AFNI: software for analysis and visualization of functional magnetic resonance neuroimages}},
-  journal = {Computers and Biomedical Research},
-  year    = {1996},
-  volume  = {29},
-  number  = {3},
-  pages   = {162-173},
-  month   = {jun},
-  doi     = {10.1006/cbmr.1996.0014}
+@article{Greve2014Cortical,
+  author  = {Greve, Douglas N. and Svarer, Claus and Fisher, Patrick M. and Feng, Ling and Hansen, Adam E. and Baar{\'e}, William and Rosen, Bruce and Fischl, Bruce and Knudsen, Gitte M.},
+  title   = {Cortical surface-based analysis reduces bias and variance in kinetic modeling of brain {PET} data},
+  journal = {NeuroImage},
+  year    = {2014},
+  volume  = {92},
+  pages   = {225--236},
+  month   = may,
+  doi     = {10.1016/j.neuroimage.2013.12.021}
 }
 
-@article{Jenkinson2012Fsl,
-  author  = {Jenkinson, M. and Beckmann, C. F. and Behrens, T. E. and Woolrich, M. W. and Smith, S. M.},
-  title   = {{Fsl}},
-  journal = {Neuroimage},
-  year    = {2012},
-  volume  = {62},
-  number  = {2},
-  pages   = {782-790},
-  month   = {aug},
-  doi     = {10.1016/j.neuroimage.2011.09.015}
-}
-
-@article{Fischl2012FreeSurfer,
-  author  = {Fischl, B.},
-  title   = {{FreeSurfer}},
-  journal = {Neuroimage},
-  year    = {2012},
-  volume  = {62},
-  number  = {2},
-  pages   = {774-781},
-  month   = {aug},
-  doi     = {10.1016/j.neuroimage.2012.01.021}
-}
-
-@article{Li2016DICOM,
-  author  = {Li, X. and Morgan, P. S. and Ashburner, J. and Smith, J. and Rorden, C.},
-  title   = {{The first step for neuroimaging data analysis: DICOM to NIfTI conversion}},
-  journal = {Journal of Neuroscience Methods},
+@article{Greve2016PVC,
+  author  = {Greve, Douglas N. and Salat, David H. and Bowen, Spencer L. and Izquierdo-Garcia, David and Schultz, Aaron P. and Catana, Ciprian and Becker, J. Alex and Svarer, Claus and Knudsen, Gitte M. and Sperling, Reisa A. and Johnson, Keith A.},
+  title   = {Different partial volume correction methods lead to different conclusions: An {$^{18}$F-FDG-PET} study of aging},
+  journal = {NeuroImage},
   year    = {2016},
-  volume  = {264},
-  pages   = {47-56},
-  month   = {may},
-  doi     = {10.1016/j.jneumeth.2016.03.001}
+  volume  = {132},
+  pages   = {334--343},
+  month   = may,
+  doi     = {10.1016/j.neuroimage.2016.02.042}
 }
 
-@misc{SPM12,
-  title  = {{Statistical Parametric Mapping, version 12 (SPM12)}},
-  author = {Functional Imaging Laboratory},
-  year   = {2020},
-  url    = {https://www.fil.ion.ucl.ac.uk/spm/software/spm12/}
+@article{Funck2018APPIAN,
+  author  = {Funck, Thomas and Larcher, Kevin and Toussaint, Paule-Joanne and Evans, Alan C. and Thiel, Alexander},
+  title   = {{APPIAN}: Automated Pipeline for {PET} Image Analysis},
+  journal = {Frontiers in Neuroinformatics},
+  year    = {2018},
+  volume  = {12},
+  pages   = {64},
+  doi     = {10.3389/fninf.2018.00064}
 }
 
-@unpublished{Graves2024Gut,
-  author = {Graves, P. and Miller, J. M. and Zanderigo, F. and others},
-  title  = {{Relationships Between the Gut and Oral Microbiome and Neuroinflammation in Major Depressive Disorder}},
-  note   = {Presented at the 79th Annual Meeting of the Society of Biological Psychiatry, Austin, Texas, USA},
-  year   = {2024}
+@misc{gorgolewski_2016_50186,
+  author       = {Gorgolewski, Krzysztof J. and
+                  Esteban, Oscar and
+                  Burns, Christopher and
+                  Ziegler, Erik and
+                  Pinsard, Basile and
+                  Madison, Cindee and
+                  Waskom, Michael and
+                  Ellis, David Gage and
+                  Clark, Dav and
+                  Dayan, Michael and
+                  Manhães-Savio, Alexandre and
+                  Notter, Michael Philipp and
+                  Johnson, Hans and
+                  Dewey, Blake E and
+                  Halchenko, Yaroslav O. and
+                  Hamalainen, Carlo and
+                  Keshavan, Anisha and
+                  Clark, Daniel and
+                  Huntenburg, Julia M. and
+                  Hanke, Michael and
+                  Nichols, B. Nolan and
+                  Wassermann , Demian and
+                  Eshaghi, Arman and
+                  Markiewicz, Christopher and
+                  Varoquaux, Gael and
+                  Acland, Benjamin and
+                  Forbes, Jessica and
+                  Rokem, Ariel and
+                  Kong, Xiang-Zhen and
+                  Gramfort, Alexandre and
+                  Kleesiek, Jens and
+                  Schaefer, Alexander and
+                  Sikka, Sharad and
+                  Perez-Guevara, Martin Felipe and
+                  Glatard, Tristan and
+                  Iqbal, Shariq and
+                  Liu, Siqi and
+                  Welch, David and
+                  Sharp, Paul and
+                  Warner, Joshua and
+                  Kastman, Erik and
+                  Lampe, Leonie and
+                  Perkins, L. Nathan and
+                  Craddock, R. Cameron and
+                  Küttner, René and
+                  Bielievtsov, Dmytro and
+                  Geisler, Daniel and
+                  Gerhard, Stephan and
+                  Liem, Franziskus and
+                  Linkersdörfer, Janosch and
+                  Margulies, Daniel S. and
+                  Andberg, Sami Kristian and
+                  Stadler, Jörg and
+                  Steele, Christopher John and
+                  Broderick, William and
+                  Cooper, Gavin and
+                  Floren, Andrew and
+                  Huang, Lijie and
+                  Gonzalez, Ivan and
+                  McNamee, Daniel and
+                  Papadopoulos Orfanos, Dimitri and
+                  Pellman, John and
+                  Triplett, William and
+                  Ghosh, Satrajit},
+  title        = {{Nipype: a flexible, lightweight and extensible
+                   neuroimaging data processing framework in Python.
+                   0.12.0-rc1}},
+  month        = apr,
+  year         = 2016,
+  doi          = {10.5281/zenodo.50186},
+  url          = {http://dx.doi.org/10.5281/zenodo.50186}
 }
 
-@unpublished{Bartlett2024TSPO,
-  author = {Bartlett, E. A. and Herzog, S. and Zanderigo, F. and others},
-  title  = {{Translocator protein (TSPO) binding assessed with 11C-ER176 PET in major depression and healthy volunteers}},
-  note   = {Presented at the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain, Montreal, Canada},
-  year   = {2024}
+@inproceedings{Norgaard2026petprep,
+  author    = {N{\o}rgaard, Martin and Esteban, Oscar and Matheson, Granville J. and others},
+  title     = {{PETPrep}: a robust preprocessing pipeline for positron emission tomography ({PET}) neuroimaging},
+  booktitle = {Proceedings of the 15th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2026},
+  month     = jun,
+  address   = {Uppsala, Sweden},
+  url       = {https://petprep.readthedocs.io/}
 }
 
-@unpublished{Matheson2024Biologically,
-  author = {Matheson, G. J. and Zanderigo, F. and Bartlett, E. A. and others},
-  title  = {{Biologically-Informed Hierarchical Approach for Genotype Correction in Translocator Protein PET and its Application to [11C]ER176 Data}},
-  note   = {Presented at the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain, Montreal, Canada},
-  year   = {2024}
+@software{Wighton2026petsurferbids,
+  author  = {Wighton, Paul and Greve, Douglas N.},
+  title   = {{PETsurfer-BIDS}: Run {PETsurfer} on {BIDS} datasets},
+  year    = {2026},
+  url     = {https://github.com/freesurfer/petsurfer-bids}
 }
 
-@unpublished{Bartlett2024Dual,
-  author = {Bartlett, E. A. and Patil, S. and Matheson, G. and others},
-  title  = {{Dual input function modeling of nonbrain 11C-ER176 signal for comparison of translocator protein (TSPO) central and peripheral binding}},
-  note   = {Presented at the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain, Montreal, Canada},
-  year   = {2024}
+@journalarticle{Marcus2011HCPCW,
+  author  = {Marcus, Daniel  and Harwell, John  and Olsen, Timothy  and Hodge, Michael  and Glasser, Matthew  and Prior, Fred  and Jenkinson, Mark  and Laumann, Timothy  and Curtiss, Sandra  and Van Essen, David },
+  title   = {Informatics and Data Mining Tools and Strategies for the Human Connectome Project},
+  journal = {Frontiers in Neuroinformatics},
+  volume  = {Volume 5 - 2011},
+  year    = {2011},
+  url     = {https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2011.00004},
+  doi     = {10.3389/fninf.2011.00004},
+  issn    = {1662-5196}
 }
 
-@unpublished{Bartlett2024Quantification,
-  author = {Bartlett, E. A. and Sublette, M. E. and Melhem, N. and Mann, J. J. and Zanderigo, F.},
-  title  = {{Quantification of 11C-ER176 TSPO distribution volume with one blood sample: optimization and validation of simultaneous estimation (SIME) of input function}},
-  note   = {Presented at the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain, Montreal, Canada},
-  year   = {2024}
+@journalarticle{Thomas2016PETPVC,
+  author = {Thomas, Benjamin A and Cuplov, Vesna and Bousse, Alexandre and Mendes, Adriana and Thielemans, Kris and Hutton, Brian F and Erlandsson, Kjell},
+  title = {PETPVC: a toolbox for performing partial volume correction techniques in positron emission tomography},
+  journal = {Physics in Medicine & Biology},
+  doi = {10.1088/0031-9155/61/22/7975},
+  url = {https://doi.org/10.1088/0031-9155/61/22/7975},
+  year = {2016},
+  month = oct,
+  publisher = {IOP Publishing},
+  volume = {61},
+  number = {22},
+  pages = {7975},
 }
 
-@unpublished{Herzog2024ER176,
-  author = {Herzog, S. and Bartlett, E. A. and Galfalvy, H. C. and others},
-  title  = {{11C-ER176 PET Imaging of Translocator Protein (TSPO) Binding in Major Depression: Relationship to Severity of Real-Time Suicidal Ideation and Negative Affect in the Context of Naturalistic Stressors}},
-  note   = {Presented at the 79th Annual Meeting of the Society of Biological Psychiatry, Austin, Texas, USA},
-  year   = {2024}
+@software{papaya_viewer,
+  author = {Research Imaging Institute},
+  title = {Papaya},
+  institution = {University of Texas Health Science Center at San Antonio},
+  url = {https://github.com/rii-mango/Papaya},
+  year = {2019}
 }
 
-@unpublished{Bartlett2023Vivo,
-  author = {Bartlett, E. A. and Patil, S. and Schmidt, M. and others},
-  title  = {{In Vivo [11C]ER176 Brain and Non-Brain Translocator Protein (TSPO) PET Binding in Major Depressive Disorder and Healthy Volunteers}},
-  note   = {Presented at the American College of Neuropsychopharmacology conference, Tampa, Florida, USA},
-  year   = {2023}
+% ---------------------------------------------------------------------------
+% Research using PICNIC
+% ---------------------------------------------------------------------------
+
+@inproceedings{Mann2022Neuroinflammation,
+  author    = {Mann, J. J. and Galfalvy, H. and Haghighi, F. and others},
+  title     = {Neuroinflammation and acute psychopathology},
+  booktitle = {77th Annual Meeting of the Society of Biological Psychiatry},
+  year      = {2022},
+  address   = {New Orleans, Louisiana, USA}
 }
 
-@unpublished{Bartlett2023Relationships,
-  author = {Bartlett, E. A. and Zanderigo, F. and Stanley, B. and others},
-  title  = {{Relationships of Childhood and Recent Stressors with in Vivo Brain Translocator Protein (TSPO) in Major Depressive Disorder and Healthy Volunteers}},
-  note   = {Presented at the 78th Annual Meeting of the Society of Biological Psychiatry, San Diego, California, USA},
-  year   = {2023}
+@inproceedings{Miller2022Relationships,
+  author    = {Miller, J. M. and Zanderigo, F. and Ogden, R. T. and Sublette, M. E. and Mann, J. J.},
+  title     = {Relationships between depression, suicidal ideation, and neuroinflammation as measured using positron emission tomography with [{$^{11}$C}]{ER}-176},
+  booktitle = {77th Annual Meeting of the Society of Biological Psychiatry},
+  year      = {2022},
+  address   = {New Orleans, Louisiana, USA}
 }
 
-@unpublished{Bartlett2023Investigation,
-  author = {Bartlett, E. A. and Zanderigo, F. and Ogden, R. T. and Sublette, M. E. and Mann, J. J. and Miller, J. M.},
-  title  = {{In vivo investigation of brain translocator protein (TSPO) and monoamine oxidase A (MAO-A) relationship in healthy volunteers}},
-  note   = {Presented at the 78th Annual Meeting of the Society of Biological Psychiatry, San Diego, California, USA},
-  year   = {2023}
+@inproceedings{Bartlett2023Vivo,
+  author    = {Bartlett, E. A. and Patil, S. and Schmidt, M. and others},
+  title     = {In vivo [{$^{11}$C}]{ER176} brain and non-brain translocator protein ({TSPO}) {PET} binding in major depressive disorder and healthy volunteers},
+  booktitle = {Annual Meeting of the American College of Neuropsychopharmacology},
+  year      = {2023},
+  address   = {Tampa, Florida, USA}
 }
 
-@unpublished{Mann2022Neuroinflammation,
-  author = {Mann, J. J. and Galfalvy, H. and Haghighi, F. and others},
-  title  = {{Neuroinflammation and Acute Psychopathology}},
-  note   = {Presented at the 77th Annual Hybrid Meeting of the Society of Biological Psychiatry, New Orleans, Louisiana, USA},
-  year   = {2022}
+@inproceedings{Bartlett2023Relationships,
+  author    = {Bartlett, E. A. and Zanderigo, F. and Stanley, B. and others},
+  title     = {Relationships of childhood and recent stressors with in vivo brain translocator protein ({TSPO}) in major depressive disorder and healthy volunteers},
+  booktitle = {78th Annual Meeting of the Society of Biological Psychiatry},
+  year      = {2023},
+  address   = {San Diego, California, USA}
 }
 
-@unpublished{Miller2022Relationships,
-  author = {Miller, J. M. and Zanderigo, F. and Ogden, R. T. and Sublette, M. E. and Mann, J. J.},
-  title  = {{Relationships between Depression, Suicidal Ideation, and Neuroinflammation as Measured Using Positron Emission Tomography with [11C]ER-176}},
-  note   = {Presented at the 77th Annual Hybrid Meeting of the Society of Biological Psychiatry, New Orleans, Louisiana, USA},
-  year   = {2022}
+@inproceedings{Bartlett2023Investigation,
+  author    = {Bartlett, E. A. and Zanderigo, F. and Ogden, R. T. and Sublette, M. E. and Mann, J. J. and Miller, J. M.},
+  title     = {In vivo investigation of brain translocator protein ({TSPO}) and monoamine oxidase {A} ({MAO-A}) relationship in healthy volunteers},
+  booktitle = {78th Annual Meeting of the Society of Biological Psychiatry},
+  year      = {2023},
+  address   = {San Diego, California, USA}
+}
+
+@inproceedings{Graves2024Gut,
+  author    = {Graves, P. and Miller, J. M. and Zanderigo, F. and others},
+  title     = {Relationships between the gut and oral microbiome and neuroinflammation in major depressive disorder},
+  booktitle = {79th Annual Meeting of the Society of Biological Psychiatry},
+  year      = {2024},
+  address   = {Austin, Texas, USA}
+}
+
+@inproceedings{Herzog2024ER176,
+  author    = {Herzog, S. and Bartlett, E. A. and Galfalvy, H. C. and others},
+  title     = {{$^{11}$C-ER176} {PET} imaging of translocator protein ({TSPO}) binding in major depression: Relationship to severity of real-time suicidal ideation and negative affect in the context of naturalistic stressors},
+  booktitle = {79th Annual Meeting of the Society of Biological Psychiatry},
+  year      = {2024},
+  address   = {Austin, Texas, USA}
+}
+
+@inproceedings{Bartlett2024TSPO,
+  author    = {Bartlett, E. A. and Herzog, S. and Zanderigo, F. and others},
+  title     = {Translocator protein ({TSPO}) binding assessed with {$^{11}$C-ER176} {PET} in major depression and healthy volunteers},
+  booktitle = {Proceedings of the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2024},
+  address   = {Montreal, Canada}
+}
+
+@inproceedings{Matheson2024Biologically,
+  author    = {Matheson, G. J. and Zanderigo, F. and Bartlett, E. A. and others},
+  title     = {Biologically-informed hierarchical approach for genotype correction in translocator protein {PET} and its application to [{$^{11}$C}]{ER176} data},
+  booktitle = {Proceedings of the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2024},
+  address   = {Montreal, Canada}
+}
+
+@inproceedings{Bartlett2024Dual,
+  author    = {Bartlett, E. A. and Patil, S. and Matheson, G. and others},
+  title     = {Dual input function modeling of nonbrain {$^{11}$C-ER176} signal for comparison of translocator protein ({TSPO}) central and peripheral binding},
+  booktitle = {Proceedings of the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2024},
+  address   = {Montreal, Canada}
+}
+
+@inproceedings{Bartlett2024Quantification,
+  author    = {Bartlett, E. A. and Sublette, M. E. and Melhem, N. and Mann, J. J. and Zanderigo, F.},
+  title     = {Quantification of {$^{11}$C-ER176} {TSPO} distribution volume with one blood sample: optimization and validation of simultaneous estimation ({SIME}) of input function},
+  booktitle = {Proceedings of the 14th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2024},
+  address   = {Montreal, Canada}
 }
 
 @article{Herzog2025Neuroinflammation,
   author  = {Herzog, S. and Bartlett, E. A. and Zanderigo, F. and others},
-  title   = {{Neuroinflammation, Stress-Related Suicidal Ideation, and Negative Mood in Depression}},
+  title   = {Neuroinflammation, stress-related suicidal ideation, and negative mood in depression},
   journal = {JAMA Psychiatry},
   year    = {2025},
   volume  = {82},
   number  = {1},
-  pages   = {85-93},
-  month   = {jan},
+  pages   = {85--93},
+  month   = jan,
   doi     = {10.1001/jamapsychiatry.2024.3543}
+}
+
+@article{Zanderigo2025MicrotubuleTRT,
+  author  = {Zanderigo, F. and Laurell, G. and Doubrovin, M. and others},
+  title   = {{$^{11}$C-MPC6827} in vivo binding to microtubules in human brain: a first test-retest study in humans},
+  journal = {Journal of Nuclear Medicine},
+  year    = {2025},
+  volume  = {66},
+  number  = {Supplement 1},
+  pages   = {251154},
+  month   = jun,
+  note    = {Abstract, SNMMI 2025 Annual Meeting, New Orleans, Louisiana, USA},
+  url     = {https://jnm.snmjournals.org/content/66/supplement_1/251154}
+}
+
+@article{Zanderigo2025TSPOSIME,
+  author  = {Zanderigo, F. and Miller, J. and Bartlett, E. and others},
+  title   = {Full quantification of {PET}-based {$^{11}$C-ER176} binding to the translocator protein ({TSPO}) using venous blood and simultaneous estimation of input function},
+  journal = {Journal of Nuclear Medicine},
+  year    = {2025},
+  volume  = {66},
+  number  = {Supplement 1},
+  pages   = {251155},
+  month   = jun,
+  note    = {Abstract, SNMMI 2025 Annual Meeting, New Orleans, Louisiana, USA},
+  url     = {https://jnm.snmjournals.org/content/66/supplement_1/251155}
+}
+
+@article{Zanderigo2026MicrotubulesTRT,
+  author  = {Zanderigo, Francesca and Laurell, Gjertrud L. and Doubrovin, Mikhail and Molotkov, Andrei and Ali, Alessandra and Arevalo, Rodolfo F. and Solingapuram Sai, Kiran K. and Mann, J. John and Mintz, Akiva},
+  title   = {Imaging microtubule dynamics in vivo in human brain: optimal quantification based on a test--retest study},
+  journal = {Journal of Nuclear Medicine},
+  year    = {2026},
+  volume  = {67},
+  number  = {4},
+  pages   = {644--650},
+  month   = apr,
+  doi     = {10.2967/jnumed.125.271335}
+}
+
+@inproceedings{Restifo2026Celecoxib,
+  author    = {Restifo-Bernstein, G. and Zanderigo, F. and Messner, G. and others},
+  title     = {Multimodal brain imaging and blood-based markers of inflammation as predictors of response to celecoxib in treatment-resistant obsessive compulsive disorder: A preliminary study},
+  booktitle = {Annual Meeting of the American College of Neuropsychopharmacology},
+  note      = {Neuropsychopharmacology, 51(Suppl. 1)},
+  year      = {2026},
+  month     = jan,
+  address   = {Nassau, Bahamas}
+}
+
+@inproceedings{Bartlett2026NonbrainTSPO,
+  author    = {Bartlett, E. and Herzog, S. and Patil, S. and others},
+  title     = {Examining the role of nonbrain {TSPO} in stress-related negative affect and suicidal ideation with [{$^{11}$C}]{ER176} positron emission tomography ({PET})},
+  booktitle = {Annual Meeting of the American College of Neuropsychopharmacology},
+  note      = {Neuropsychopharmacology, 51(Suppl. 1)},
+  year      = {2026},
+  month     = jan,
+  address   = {Nassau, Bahamas}
+}
+
+@inproceedings{Bartlett2026TSPOMAOA,
+  author    = {Bartlett, E. and Zanderigo, F. and Sublette, M. E. and Miller, J. M. and Mann, J. J.},
+  title     = {Within-participant mitochondrial translocator protein ({TSPO}) and monoamine oxidase {A} ({MAO-A}) availability in major depression and healthy brain},
+  booktitle = {Proceedings of the 15th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2026},
+  month     = jun,
+  address   = {Uppsala, Sweden}
+}
+
+@inproceedings{Bartlett2026OpenNeuroSTARE,
+  author    = {Bartlett, E. and Laurell, G. and Schmidt, M. and Zanderigo, F.},
+  title     = {External validation with an {OpenNeuro} publicly available dataset of Source-to-Target Automatic Rotating Estimation ({STARE}) for data-driven, blood-free quantification of [{$^{18}$F}]{FDG}},
+  booktitle = {Proceedings of the 15th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2026},
+  month     = jun,
+  address   = {Uppsala, Sweden}
+}
+
+@inproceedings{Laurell2026MCP6827,
+  author    = {Laurell, G. and Solingapuram Sai, K. K. and Mann, J. and others},
+  title     = {Towards reduced invasiveness and improved reliability and time-stability for {PET} imaging of microtubule dynamics with [{$^{11}$C}]{MPC6827}},
+  booktitle = {Proceedings of the 15th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2026},
+  month     = jun,
+  address   = {Uppsala, Sweden}
+}
+
+@inproceedings{Laurell2026ER176,
+  author    = {Laurell, G. and Bartlett, E. and Miller, J. and others},
+  title     = {Evaluation of time-stability and less-invasive quantification methods for [{$^{11}$C}]{ER176} {PET} imaging of the 18 {kDa} translocator protein},
+  booktitle = {Proceedings of the 15th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2026},
+  month     = jun,
+  address   = {Uppsala, Sweden}
+}
+
+@inproceedings{Haver2026Comparison,
+  author    = {Haver, G. and Matheson, G. and Yngwe, H. and others},
+  title     = {Validation of {BIDS} apps for preprocessing on human [{$^{11}$C}]{UCB-J} {PET} data},
+  booktitle = {Proceedings of the 15th International Symposium on Functional Neuroreceptor Mapping of the Living Brain},
+  year      = {2026},
+  month     = jun,
+  address   = {Uppsala, Sweden}
 }
