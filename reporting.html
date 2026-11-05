@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reporting &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PICNIC Version history and change log" href="changelog.html" />
+    <link rel="prev" title="PICNIC Nodes and Workflows" href="workflows.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reporting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.advanced_colorbar_limits"><code class="docutils literal notranslate"><span class="pre">advanced_colorbar_limits()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.assemble_images"><code class="docutils literal notranslate"><span class="pre">assemble_images()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.calculate_cut_coords_bounds"><code class="docutils literal notranslate"><span class="pre">calculate_cut_coords_bounds()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.camra_summary"><code class="docutils literal notranslate"><span class="pre">camra_summary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.coregistration_summary"><code class="docutils literal notranslate"><span class="pre">coregistration_summary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.create_mp4_from_image_list"><code class="docutils literal notranslate"><span class="pre">create_mp4_from_image_list()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.create_report"><code class="docutils literal notranslate"><span class="pre">create_report()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.image_summary"><code class="docutils literal notranslate"><span class="pre">image_summary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.motion_correction_summary"><code class="docutils literal notranslate"><span class="pre">motion_correction_summary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_anat"><code class="docutils literal notranslate"><span class="pre">plot_anat()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_camra_graph"><code class="docutils literal notranslate"><span class="pre">plot_camra_graph()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_camra_image"><code class="docutils literal notranslate"><span class="pre">plot_camra_image()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_coregistration"><code class="docutils literal notranslate"><span class="pre">plot_coregistration()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_image_overlay"><code class="docutils literal notranslate"><span class="pre">plot_image_overlay()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_motion_correction_graph"><code class="docutils literal notranslate"><span class="pre">plot_motion_correction_graph()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.plot_motion_correction_image"><code class="docutils literal notranslate"><span class="pre">plot_motion_correction_image()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reports.tacs_summary"><code class="docutils literal notranslate"><span class="pre">tacs_summary()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reporting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/reporting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <nav class="contents" id="contents" role="doc-toc">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#module-picnic.workflows.reports" id="id17">Reporting</a></p></li>
+</ul>
+</nav>
+<section id="module-picnic.workflows.reports">
+<span id="reporting"></span><h1><a class="toc-backref" href="#id17" role="doc-backlink">Reporting</a><a class="headerlink" href="#module-picnic.workflows.reports" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.advanced_colorbar_limits">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">advanced_colorbar_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#advanced_colorbar_limits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.advanced_colorbar_limits" title="Permalink to this definition"></a></dt>
+<dd><p>calculate the colorbar limits by reducing the weight of the edge most voxels</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image - nibabel.Nifti1Image obj</dt><dd><p>the pet image we are trying to get the colorbar limit from</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.assemble_images">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">assemble_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">STANDARD_WIDTH</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1120</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#assemble_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.assemble_images" title="Permalink to this definition"></a></dt>
+<dd><p>paste together images</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image - list</dt><dd><p>a list of all the images that will be pasted together</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.calculate_cut_coords_bounds">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">calculate_cut_coords_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nifti</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#calculate_cut_coords_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.calculate_cut_coords_bounds" title="Permalink to this definition"></a></dt>
+<dd><p>use nibabel to calculate the cut coords bounds</p>
+<section id="id2">
+<h2>Parameters<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>nifti - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.camra_summary">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">camra_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'motion_correction'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#camra_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.camra_summary" title="Permalink to this definition"></a></dt>
+<dd><p>wrap the necessary steps to create a desired subsidiary of the *image summary</p>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>base_file - file-like string</dt><dd><p>the base image (aka T1)</p>
+</dd>
+<dt>overlay_files - list of file-like strings</dt><dd><p>the camra attempts</p>
+</dd>
+<dt>mats - list</dt><dd><p>a list of all the transformation matrices</p>
+</dd>
+<dt>rank - int</dt><dd><p>which camra method was picked</p>
+</dd>
+<dt>basename - string</dt><dd><p>the basename for the output filename</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.coregistration_summary">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">coregistration_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'coregistration'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#coregistration_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.coregistration_summary" title="Permalink to this definition"></a></dt>
+<dd><p>use nilearn create a movie for coregistration</p>
+<section id="id4">
+<h2>Parameters<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>base_file - file-like string</dt><dd><p>the base file</p>
+</dd>
+<dt>overlay_file - file-like string</dt><dd><p>the overlaying image file</p>
+</dd>
+<dt>basename - string</dt><dd><p>the basename for the output filename</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.create_mp4_from_image_list">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">create_mp4_from_image_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#create_mp4_from_image_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.create_mp4_from_image_list" title="Permalink to this definition"></a></dt>
+<dd><p>create a movie from a list of Image objects</p>
+<section id="id5">
+<h2>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image_list - list of Images</dt><dd><p>list of mosaic images</p>
+</dd>
+<dt>output_filename - string</dt><dd><p>must be a movie file type (.mp4)</p>
+</dd>
+<dt>fps - int</dt><dd><p>frames per second</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.create_report">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extras</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>a function to create reports</p>
+<section id="id6">
+<h2>Parameters<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>report_type - str</dt><dd><p>the type of report to create</p>
+</dd>
+<dt>files - list</dt><dd><p>a list of input files</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.image_summary">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">image_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'image'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#image_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.image_summary" title="Permalink to this definition"></a></dt>
+<dd><p>wrap the necessary steps to create a summary report of *image</p>
+<section id="id7">
+<h2>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>in_file - file-like string</dt><dd><p>the image for which we are creating a summary</p>
+</dd>
+<dt>basename - string</dt><dd><p>the basename for the output filename</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.motion_correction_summary">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">motion_correction_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">moco_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'motion_correction'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#motion_correction_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.motion_correction_summary" title="Permalink to this definition"></a></dt>
+<dd><p>wrap the necessary steps to create a desired subsidiary of the *image summary</p>
+<section id="id8">
+<h2>Parameters<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>base_file - file-like string</dt><dd><p>the base image</p>
+</dd>
+<dt>moco_file - file-like string</dt><dd><p>the motion corrected image</p>
+</dd>
+<dt>mats - list</dt><dd><p>a list of all the transformation matrices</p>
+</dd>
+<dt>ref_frame - int</dt><dd><p>which frame is the reference frame</p>
+</dd>
+<dt>basename - string</dt><dd><p>the basename for the output filename</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_anat">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_anat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_coords_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_anat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_anat" title="Permalink to this definition"></a></dt>
+<dd><p>use nilearn.plotting to plot the anatomy</p>
+<section id="id9">
+<h2>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+<dt>cut_coords_bounds - dict</dt><dd><p>the cut bounds in xyz (mm); must contain ‘x’, ‘y’ and ‘z’ key</p>
+</dd>
+<dt>cmap - string</dt><dd><p>color map</p>
+</dd>
+<dt>vmin - float</dt><dd><p>the min value for the color map</p>
+</dd>
+<dt>vmax - float</dt><dd><p>the min value for the color map</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_camra_graph">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_camra_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_dof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autoselect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_camra_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_camra_graph" title="Permalink to this definition"></a></dt>
+<dd><p>create pyplots for motion correction</p>
+<section id="id10">
+<h2>Parameters<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>t - numpy array</dt><dd><p>time</p>
+</dd>
+<dt>all_dof - numpy array</dt><dd><p>x, y, z, rx, ry, rz in an array</p>
+</dd>
+<dt>idx - int</dt><dd><p>denote which frame we are looking at</p>
+</dd>
+<dt>autoselect -int</dt><dd><p>denote the reference frame</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_camra_image">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_camra_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlay_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_coords_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'jet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_camra_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_camra_image" title="Permalink to this definition"></a></dt>
+<dd><p>use nilearn.plotting to plot the ortho for motion correction</p>
+<section id="id11">
+<h2>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>base_image - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+<dt>overlay_image - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+<dt>cut_coords_bounds - dict</dt><dd><p>the cut bounds in xyz (mm); must contain ‘x’, ‘y’ and ‘z’ key</p>
+</dd>
+<dt>cmap - string</dt><dd><p>color map</p>
+</dd>
+<dt>alpha - float</dt><dd><p>the opacity number</p>
+</dd>
+<dt>vmin - float</dt><dd><p>the min value for the color map</p>
+</dd>
+<dt>vmax - float</dt><dd><p>the min value for the color map</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_coregistration">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_coregistration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overlay_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_coords_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'jet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_coregistration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_coregistration" title="Permalink to this definition"></a></dt>
+<dd><p>use nilearn.plotting to plot the anatomy</p>
+<section id="id12">
+<h2>Parameters<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+<dt>cut_coords_bounds - dict</dt><dd><p>the cut bounds in xyz (mm); must contain ‘x’, ‘y’ and ‘z’ key</p>
+</dd>
+<dt>cmap - string</dt><dd><p>color map</p>
+</dd>
+<dt>n_cuts - int</dt><dd><p>how many images per row</p>
+</dd>
+<dt>alpha - float</dt><dd><p>the opacity of the image</p>
+</dd>
+<dt>vmin - float</dt><dd><p>the min value for the color map</p>
+</dd>
+<dt>vmax - float</dt><dd><p>the min value for the color map</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_image_overlay">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_image_overlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">overlay_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_coords_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'y'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gray'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_cuts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_image_overlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_image_overlay" title="Permalink to this definition"></a></dt>
+<dd><p>use nilearn.plotting to plot the anatomy</p>
+<section id="id13">
+<h2>Parameters<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+<dt>cut_coords_bounds - dict</dt><dd><p>the cut bounds in xyz (mm); must contain ‘x’, ‘y’ and ‘z’ key</p>
+</dd>
+<dt>direction - str</dt><dd><p>the direction we are looking at. Should be ‘x’, ‘y’ or ‘z’</p>
+</dd>
+<dt>cmap - string</dt><dd><p>color map</p>
+</dd>
+<dt>n_cuts - int</dt><dd><p>how many images per row</p>
+</dd>
+<dt>alpha - float</dt><dd><p>the opacity of the image</p>
+</dd>
+<dt>vmin - float</dt><dd><p>the min value for the color map</p>
+</dd>
+<dt>vmax - float</dt><dd><p>the min value for the color map</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_motion_correction_graph">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_motion_correction_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_dof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_frame</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_motion_correction_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_motion_correction_graph" title="Permalink to this definition"></a></dt>
+<dd><p>create pyplots for motion correction</p>
+<section id="id14">
+<h2>Parameters<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>t - np array</dt><dd><p>time</p>
+</dd>
+<dt>all_dof - np array</dt><dd><p>x, y, z, rx, ry, rz in an array</p>
+</dd>
+<dt>frame - int</dt><dd><p>denote which frame we are looking at</p>
+</dd>
+<dt>ref_frame -int</dt><dd><p>denote the reference frame</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.plot_motion_correction_image">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">plot_motion_correction_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_coords_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'jet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#plot_motion_correction_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.plot_motion_correction_image" title="Permalink to this definition"></a></dt>
+<dd><p>use nilearn.plotting to plot the ortho for motion correction</p>
+<section id="id15">
+<h2>Parameters<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>image - nibabel.Nifti1Image</dt><dd><p>the nibabel image</p>
+</dd>
+<dt>cut_coords_bounds - dict</dt><dd><p>the cut bounds in xyz (mm); must contain ‘x’, ‘y’ and ‘z’ key</p>
+</dd>
+<dt>cmap - string</dt><dd><p>color map</p>
+</dd>
+<dt>vmin - float</dt><dd><p>the min value for the color map</p>
+</dd>
+<dt>vmax - float</dt><dd><p>the min value for the color map</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="picnic.workflows.reports.tacs_summary">
+<span class="sig-prename descclassname"><span class="pre">picnic.workflows.reports.</span></span><span class="sig-name descname"><span class="pre">tacs_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tacs_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tacs'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reports.html#tacs_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reports.tacs_summary" title="Permalink to this definition"></a></dt>
+<dd><p>use matplotlib to plot all the tacs</p>
+<section id="id16">
+<h2>Parameters<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>tacs_file - file-like string</dt><dd><p>the tac tsv</p>
+</dd>
+<dt>units - string</dt><dd><p>uci or bq</p>
+</dd>
+<dt>basename - string</dt><dd><p>the basename for the output filename</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="workflows.html" class="btn btn-neutral float-left" title="PICNIC Nodes and Workflows" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="changelog.html" class="btn btn-neutral float-right" title="PICNIC Version history and change log" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

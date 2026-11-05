@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PICNIC Nodes and Workflows &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reporting" href="reporting.html" />
+    <link rel="prev" title="Base Card and CardBuilder" href="cards.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PICNIC Nodes and Workflows</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.image_workflows.Dcm2niiWorkflow"><code class="docutils literal notranslate"><span class="pre">Dcm2niiWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.Dcm2niiWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">Dcm2niiWorkflow.convert_to_nii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.image_workflows.Dcm2niixWorkflow"><code class="docutils literal notranslate"><span class="pre">Dcm2niixWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.Dcm2niixWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">Dcm2niixWorkflow.convert_to_nii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.DEFAULT_INFLOWS"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.DEFAULT_INFLOWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.DEFAULT_PARAMS"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.DEFAULT_PARAMS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.build_workflow"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.build_workflow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.convert_to_nii()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.create_report"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.create_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.merge_all_images"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.merge_all_images()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.ImageWorkflow.search_for_jsons"><code class="docutils literal notranslate"><span class="pre">ImageWorkflow.search_for_jsons()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.image_workflows.NibabelLoadWorkflow"><code class="docutils literal notranslate"><span class="pre">NibabelLoadWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.image_workflows.NibabelLoadWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">NibabelLoadWorkflow.convert_to_nii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.DEFAULT_INFLOWS"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.DEFAULT_INFLOWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.DEFAULT_PARAMS"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.DEFAULT_PARAMS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.build_workflow"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.build_workflow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.coregister"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.coregister()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_brainmask_from_t1"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.create_brainmask_from_t1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_gm_and_wmmasked_t1"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.create_gm_and_wmmasked_t1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_probabilistic_mask"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.create_probabilistic_mask()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_report"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.create_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.crop_image"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.crop_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.gmmask_t1"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.gmmask_t1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.pet_brainmask_from_ct"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.pet_brainmask_from_ct()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.pick_best_coregistration"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.pick_best_coregistration()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.rename_outputs"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.rename_outputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.reorient_in_files"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.reorient_in_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.CamraWorkflow.segment_t1"><code class="docutils literal notranslate"><span class="pre">CamraWorkflow.segment_t1()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.camra_workflows.LcfCamraWorkflow"><code class="docutils literal notranslate"><span class="pre">LcfCamraWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.camra_workflows.LcfCamraWorkflow.pick_best_coregistration"><code class="docutils literal notranslate"><span class="pre">LcfCamraWorkflow.pick_best_coregistration()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyNode"><code class="docutils literal notranslate"><span class="pre">NipibipyNode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_mapnode"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow.add_mapnode()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_node"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow.add_node()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.assign_node_inputs"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow.assign_node_inputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.connect_nodes"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow.connect_nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.run"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow.run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.sink_outflows"><code class="docutils literal notranslate"><span class="pre">NipibipyWorkflow.sink_outflows()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.pvc_workflows.Dcm2niiWorkflow"><code class="docutils literal notranslate"><span class="pre">Dcm2niiWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.Dcm2niiWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">Dcm2niiWorkflow.convert_to_nii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.pvc_workflows.Dcm2niixWorkflow"><code class="docutils literal notranslate"><span class="pre">Dcm2niixWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.Dcm2niixWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">Dcm2niixWorkflow.convert_to_nii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.pvc_workflows.NibabelLoadWorkflow"><code class="docutils literal notranslate"><span class="pre">NibabelLoadWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.NibabelLoadWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">NibabelLoadWorkflow.convert_to_nii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.DEFAULT_INFLOWS"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.DEFAULT_INFLOWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.DEFAULT_PARAMS"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.DEFAULT_PARAMS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.build_workflow"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.build_workflow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.convert_to_nii"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.convert_to_nii()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.create_report"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.create_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.merge_all_images"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.merge_all_images()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.pvc_workflows.PvcWorkflow.search_for_jsons"><code class="docutils literal notranslate"><span class="pre">PvcWorkflow.search_for_jsons()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.DEFAULT_INFLOWS"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.DEFAULT_INFLOWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.DEFAULT_PARAMS"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.DEFAULT_PARAMS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.build_workflow"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.build_workflow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.create_report"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.create_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.crop_image"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.crop_image()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.motion_correct"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.motion_correct()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.rename_outputs"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.rename_outputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.reorient_in_file"><code class="docutils literal notranslate"><span class="pre">MotionCorrectionWorkflow.reorient_in_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.DEFAULT_INFLOWS"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.DEFAULT_INFLOWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.build_workflow"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.build_workflow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.create_report"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.create_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.execute_reconall"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.execute_reconall()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_bilateral_rois"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.generate_bilateral_rois()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_gray_matter_mask"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.generate_gray_matter_mask()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_subcortical_mask"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.generate_subcortical_mask()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_ventricle_mask"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.generate_ventricle_mask()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_white_matter_mask"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.generate_white_matter_mask()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_wholebrain_mask"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.generate_wholebrain_mask()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.params"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.params</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.reorient_outflows"><code class="docutils literal notranslate"><span class="pre">ReconallWorkflow.reorient_outflows()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.DEFAULT_INFLOWS"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.DEFAULT_INFLOWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.DEFAULT_PARAMS"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.DEFAULT_PARAMS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.build_workflow"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.build_workflow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.create_report"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.create_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.create_tacs"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.create_tacs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.find_associated_jsons"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.find_associated_jsons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.rename_outputs"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.rename_outputs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#picnic.workflows.tacs_workflows.TacsWorkflow.reorient_all_images"><code class="docutils literal notranslate"><span class="pre">TacsWorkflow.reorient_all_images()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">PICNIC Nodes and Workflows</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/workflows.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <nav class="contents" id="contents" role="doc-toc">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#module-picnic.workflows.image_workflows" id="id13">PICNIC Nodes and Workflows</a></p></li>
+</ul>
+</nav>
+<section id="module-picnic.workflows.image_workflows">
+<span id="picnic-nodes-and-workflows"></span><h1><a class="toc-backref" href="#id13" role="doc-backlink">PICNIC Nodes and Workflows</a><a class="headerlink" href="#module-picnic.workflows.image_workflows" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.Dcm2niiWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.image_workflows.</span></span><span class="sig-name descname"><span class="pre">Dcm2niiWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#Dcm2niiWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.Dcm2niiWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>convert a set of dicoms using dcm2nii</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.Dcm2niiWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#Dcm2niiWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.Dcm2niiWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>use dcm2niix to convert a list of dicoms to nii</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.Dcm2niixWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.image_workflows.</span></span><span class="sig-name descname"><span class="pre">Dcm2niixWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#Dcm2niixWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.Dcm2niixWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>convert a set of dicoms using dcm2niix</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.Dcm2niixWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#Dcm2niixWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.Dcm2niixWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>use dcm2niix to convert a list of dicoms to nii</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.image_workflows.</span></span><span class="sig-name descname"><span class="pre">ImageWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#ImageWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>A parent class to the individual image convertion modules. Most of the 
+steps will be the same across converters (finding jsons, merging multiple 
+images, etc.). This creates a parent class keep the same steps, but 
+overload the critical “convert_to_nii” method.</p>
+<p>The public attributes that are important:
+wf - the nipype.Workflow</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.DEFAULT_INFLOWS">
+<span class="sig-name descname"><span class="pre">DEFAULT_INFLOWS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'in_files':</span> <span class="pre">[]}</span></em><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.DEFAULT_INFLOWS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.DEFAULT_PARAMS">
+<span class="sig-name descname"><span class="pre">DEFAULT_PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'name':</span> <span class="pre">'nibabel_image_import',</span> <span class="pre">'report':</span> <span class="pre">True}</span></em><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.DEFAULT_PARAMS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#ImageWorkflow.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>Create a nipype workflow to convert all images provided to a
+standard imaging file type (nii or nii.gz)</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>sink_directory - file-like str</dt><dd><p>The sink filepath or ‘’</p>
+</dd>
+</dl>
+<p>returns - custom_workflow_constructors.NipibipyWorkflow obj</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#ImageWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>this will be overloaded by all its children</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.create_report">
+<span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#ImageWorkflow.create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>create a report</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.merge_all_images">
+<span class="sig-name descname"><span class="pre">merge_all_images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#ImageWorkflow.merge_all_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.merge_all_images" title="Permalink to this definition"></a></dt>
+<dd><p>combine all the reoriented images to one volume and rename the file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.ImageWorkflow.search_for_jsons">
+<span class="sig-name descname"><span class="pre">search_for_jsons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#ImageWorkflow.search_for_jsons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.ImageWorkflow.search_for_jsons" title="Permalink to this definition"></a></dt>
+<dd><p>search for any associated jsons</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.NibabelLoadWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.image_workflows.</span></span><span class="sig-name descname"><span class="pre">NibabelLoadWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#NibabelLoadWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.NibabelLoadWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>load an image image using nibabel</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.image_workflows.NibabelLoadWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/image_workflows.html#NibabelLoadWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.image_workflows.NibabelLoadWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>use nibabel to load an image modality, extract its affine and 
+resave it as a nifti gz</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-picnic.workflows.camra_workflows"></span><dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.camra_workflows.</span></span><span class="sig-name descname"><span class="pre">CamraWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>C-AMRA (Coregistration - Automated Multi-Run Approach) is complex and 
+requires a couple different steps. This parent class will contain the 
+repeatable steps. The children classes contain the unique steps.</p>
+<p>The public attributes that are important:
+wf - the nipype.Workflow</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.DEFAULT_INFLOWS">
+<span class="sig-name descname"><span class="pre">DEFAULT_INFLOWS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'4d_image':</span> <span class="pre">None,</span> <span class="pre">'brain':</span> <span class="pre">None,</span> <span class="pre">'ct':</span> <span class="pre">None,</span> <span class="pre">'gmmask':</span> <span class="pre">None,</span> <span class="pre">'t1':</span> <span class="pre">None,</span> <span class="pre">'wmmask':</span> <span class="pre">None}</span></em><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.DEFAULT_INFLOWS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.DEFAULT_PARAMS">
+<span class="sig-name descname"><span class="pre">DEFAULT_PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'cost':</span> <span class="pre">'mutualinfo',</span> <span class="pre">'crop_end':</span> <span class="pre">False,</span> <span class="pre">'crop_start':</span> <span class="pre">False,</span> <span class="pre">'ct':</span> <span class="pre">False,</span> <span class="pre">'dof':</span> <span class="pre">6,</span> <span class="pre">'name':</span> <span class="pre">'lcf_camra',</span> <span class="pre">'rank':</span> <span class="pre">1,</span> <span class="pre">'report':</span> <span class="pre">True,</span> <span class="pre">'search_angle':</span> <span class="pre">35,</span> <span class="pre">'smooth':</span> <span class="pre">0}</span></em><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.DEFAULT_PARAMS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>create a nipype workflow to run freesurfer’s reconall</p>
+<section id="id1">
+<h2>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>sink_directory - file-like str</dt><dd><p>The sink filepath or ‘’</p>
+</dd>
+</dl>
+<p>returns - custom_workflow_constructors.NipibipyWorkflow obj</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.coregister">
+<span class="sig-name descname"><span class="pre">coregister</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.coregister"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.coregister" title="Permalink to this definition"></a></dt>
+<dd><p>coregister each source to each target using different registration
+softwares</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.create_brainmask_from_t1">
+<span class="sig-name descname"><span class="pre">create_brainmask_from_t1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.create_brainmask_from_t1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_brainmask_from_t1" title="Permalink to this definition"></a></dt>
+<dd><p>create a brainmask using BET</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.create_gm_and_wmmasked_t1">
+<span class="sig-name descname"><span class="pre">create_gm_and_wmmasked_t1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.create_gm_and_wmmasked_t1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_gm_and_wmmasked_t1" title="Permalink to this definition"></a></dt>
+<dd><p>Create a target image for the combined masks of grey and white masks</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.create_probabilistic_mask">
+<span class="sig-name descname"><span class="pre">create_probabilistic_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.create_probabilistic_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_probabilistic_mask" title="Permalink to this definition"></a></dt>
+<dd><p>create a target image where we artificially lower the white matter
+intensities by half, keep the grey matter the same and zero out 
+everything else</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.create_report">
+<span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>create a report</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.crop_image">
+<span class="sig-name descname"><span class="pre">crop_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.crop_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.crop_image" title="Permalink to this definition"></a></dt>
+<dd><p>use nibabel to crop the image</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.gmmask_t1">
+<span class="sig-name descname"><span class="pre">gmmask_t1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.gmmask_t1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.gmmask_t1" title="Permalink to this definition"></a></dt>
+<dd><p>create a target image for the gmmask-ed t1</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.pet_brainmask_from_ct">
+<span class="sig-name descname"><span class="pre">pet_brainmask_from_ct</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.pet_brainmask_from_ct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.pet_brainmask_from_ct" title="Permalink to this definition"></a></dt>
+<dd><p>create a brainmask from the ct</p>
+<section id="id2">
+<h2>Parameters<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h2>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.pick_best_coregistration">
+<span class="sig-name descname"><span class="pre">pick_best_coregistration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.pick_best_coregistration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.pick_best_coregistration" title="Permalink to this definition"></a></dt>
+<dd><p>this will be overloaded by all its children</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.rename_outputs">
+<span class="sig-name descname"><span class="pre">rename_outputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.rename_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.rename_outputs" title="Permalink to this definition"></a></dt>
+<dd><p>standardize the filenames to the workflow name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.reorient_in_files">
+<span class="sig-name descname"><span class="pre">reorient_in_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.reorient_in_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.reorient_in_files" title="Permalink to this definition"></a></dt>
+<dd><p>make sure all the images given are niftis and have diagnoal affines</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.CamraWorkflow.segment_t1">
+<span class="sig-name descname"><span class="pre">segment_t1</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#CamraWorkflow.segment_t1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.CamraWorkflow.segment_t1" title="Permalink to this definition"></a></dt>
+<dd><p>segment the t1 using FAST</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.LcfCamraWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.camra_workflows.</span></span><span class="sig-name descname"><span class="pre">LcfCamraWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#LcfCamraWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.LcfCamraWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>child object using flirt to motion correct</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.camra_workflows.LcfCamraWorkflow.pick_best_coregistration">
+<span class="sig-name descname"><span class="pre">pick_best_coregistration</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/camra_workflows.html#LcfCamraWorkflow.pick_best_coregistration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.camra_workflows.LcfCamraWorkflow.pick_best_coregistration" title="Permalink to this definition"></a></dt>
+<dd><p>use the Lowest Cost Function (LCF) method to pick the best 
+coregistration</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-picnic.workflows.custom_workflow_constructors"></span><dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyNode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.custom_workflow_constructors.</span></span><span class="sig-name descname"><span class="pre">NipibipyNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyNode" title="Permalink to this definition"></a></dt>
+<dd><p>a helper to associated node with the outflows</p>
+<p>The sole purpose of this is to keep track of the outflow so connecting 
+them later will be easier</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.custom_workflow_constructors.</span></span><span class="sig-name descname"><span class="pre">NipibipyWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outflows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>Nipibipy custom workflows</p>
+<p>By leveraging nipype’s workflow system we have some helper methods to build 
+workflows as the module is being assembled. Most of the heavy lifting is 
+being done by the add_node and add_mapnode methods.</p>
+<dl class="simple">
+<dt>The public attributes that are important:</dt><dd><p>workflow - the nipype.Workflow assigned to the module</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_mapnode">
+<span class="sig-name descname"><span class="pre">add_mapnode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outflows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterfield</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_sink</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow.add_mapnode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_mapnode" title="Permalink to this definition"></a></dt>
+<dd><p>add a mapnode to the current workflow</p>
+<section id="id3">
+<h2>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>interface - Nipype interface</dt><dd><p>the Node interface. ex - Function, Dcm2niix, FLIRT, etc.</p>
+</dd>
+<dt>name - str</dt><dd><p>the node name</p>
+</dd>
+<dt>inflows - dict</dt><dd><p>pairing of the required inputs and where they are connecting from</p>
+</dd>
+<dt>outflows - tuple</dt><dd><p>the node outputs. There is no pair because the doesn’t (to this 
+point) know where to connect them</p>
+</dd>
+<dt>iterfield - list</dt><dd><p>a list of all the field that should be iterated</p>
+</dd>
+<dt>to_sink - list</dt><dd><p>list of all the outflows that should be sunk</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outflows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_sink</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow.add_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.add_node" title="Permalink to this definition"></a></dt>
+<dd><p>add a node to the current workflow</p>
+<section id="id4">
+<h2>Parameters<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>interface - nipype interface</dt><dd><p>the Node interface. ex - Function, Dcm2niix, FLIRT, etc.</p>
+</dd>
+<dt>name - str</dt><dd><p>the node name</p>
+</dd>
+<dt>inflows - dict</dt><dd><p>pairing of the required inputs and where they are connecting from
+ex {‘in_file’ : ‘workflow_step_1.out_file’} or {‘idx’ : 1}</p>
+</dd>
+<dt>outflows - tuple</dt><dd><p>the node outputs. There is no pair because the doesn’t (to this 
+point) know where to connect them</p>
+</dd>
+<dt>to_sink - list</dt><dd><p>list of all the outflows that should be sunk</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.assign_node_inputs">
+<span class="sig-name descname"><span class="pre">assign_node_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow.assign_node_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.assign_node_inputs" title="Permalink to this definition"></a></dt>
+<dd><p>assign the node inflows. Either find its connection to another node
+or assign the string, int, etc</p>
+<section id="id5">
+<h2>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>node_name - str</dt><dd><p>name of the node</p>
+</dd>
+<dt>inflows - dict</dt><dd><p>pairing of the required inputs and where they are connecting from</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.connect_nodes">
+<span class="sig-name descname"><span class="pre">connect_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_node_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_connection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_node_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_connection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow.connect_nodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.connect_nodes" title="Permalink to this definition"></a></dt>
+<dd><p>connect two nodes together</p>
+<section id="id6">
+<h2>Parameters<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>in_node_name - str</dt><dd><p>the name of the node being connected</p>
+</dd>
+<dt>in_connection - str</dt><dd><p>the name of the connection</p>
+</dd>
+<dt>out_node_name - str</dt><dd><p>the name of the node doing the connecting</p>
+</dd>
+<dt>out_connection - str</dt><dd><p>the name of the connection</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.run" title="Permalink to this definition"></a></dt>
+<dd><p>shortcut to run the workflow that has already been built</p>
+<section id="id7">
+<h2>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>base_dir - file-like str</dt><dd><p>the location to store the intermediate temp files</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.sink_outflows">
+<span class="sig-name descname"><span class="pre">sink_outflows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_name_being_sunk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/custom_workflow_constructors.html#NipibipyWorkflow.sink_outflows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.custom_workflow_constructors.NipibipyWorkflow.sink_outflows" title="Permalink to this definition"></a></dt>
+<dd><p>sink the designated outflows</p>
+<section id="id8">
+<h2>Parameters<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>node_name_being_sunk - str</dt><dd><p>the name of the node being sunk</p>
+</dd>
+<dt>outflows - list (or other iterable)</dt><dd><p>a list of the outputs to sink</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-picnic.workflows.pvc_workflows"></span><dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.Dcm2niiWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.pvc_workflows.</span></span><span class="sig-name descname"><span class="pre">Dcm2niiWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#Dcm2niiWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.Dcm2niiWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>convert a set of dicoms using dcm2nii</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.Dcm2niiWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#Dcm2niiWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.Dcm2niiWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>use dcm2niix to convert a list of dicoms to nii</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.Dcm2niixWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.pvc_workflows.</span></span><span class="sig-name descname"><span class="pre">Dcm2niixWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#Dcm2niixWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.Dcm2niixWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>convert a set of dicoms using dcm2niix</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.Dcm2niixWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#Dcm2niixWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.Dcm2niixWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>use dcm2niix to convert a list of dicoms to nii</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.NibabelLoadWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.pvc_workflows.</span></span><span class="sig-name descname"><span class="pre">NibabelLoadWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#NibabelLoadWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.NibabelLoadWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>load an image image using nibabel</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.NibabelLoadWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#NibabelLoadWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.NibabelLoadWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>use nibabel to load an image modality, extract its affine and 
+resave it as a nifti gz</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.pvc_workflows.</span></span><span class="sig-name descname"><span class="pre">PvcWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#PvcWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>A parent class to the individual image convertion modules. Most of the 
+steps will be the same across converters (finding jsons, merging multiple 
+images, etc.). This creates a parent class keep the same steps, but 
+overload the critical “convert_to_nii” method.</p>
+<p>The public attributes that are important:
+wf - the nipype.Workflow</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.DEFAULT_INFLOWS">
+<span class="sig-name descname"><span class="pre">DEFAULT_INFLOWS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'in_files':</span> <span class="pre">[]}</span></em><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.DEFAULT_INFLOWS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.DEFAULT_PARAMS">
+<span class="sig-name descname"><span class="pre">DEFAULT_PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'name':</span> <span class="pre">'nibabel_image_import',</span> <span class="pre">'report':</span> <span class="pre">True}</span></em><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.DEFAULT_PARAMS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#PvcWorkflow.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>create a nipype workflow to convert all images provided to a 
+standard imaging file type (nii or nii.gz)</p>
+<section id="id9">
+<h2>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>sink_directory - file-like str</dt><dd><p>The sink filepath or ‘’</p>
+</dd>
+</dl>
+<p>returns - custom_workflow_constructors.NipibipyWorkflow obj</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.convert_to_nii">
+<span class="sig-name descname"><span class="pre">convert_to_nii</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#PvcWorkflow.convert_to_nii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.convert_to_nii" title="Permalink to this definition"></a></dt>
+<dd><p>this will be overloaded by all its children</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.create_report">
+<span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#PvcWorkflow.create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>create a report</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.merge_all_images">
+<span class="sig-name descname"><span class="pre">merge_all_images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#PvcWorkflow.merge_all_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.merge_all_images" title="Permalink to this definition"></a></dt>
+<dd><p>combine all the reoriented images to one volume and rename the file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.pvc_workflows.PvcWorkflow.search_for_jsons">
+<span class="sig-name descname"><span class="pre">search_for_jsons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/pvc_workflows.html#PvcWorkflow.search_for_jsons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.pvc_workflows.PvcWorkflow.search_for_jsons" title="Permalink to this definition"></a></dt>
+<dd><p>search for any associated jsons</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.motioncorrection_workflows.</span></span><span class="sig-name descname"><span class="pre">MotionCorrectionWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>A parent class for all the different motion correction methods. Most of 
+the steps will be the same across all types of this module (reorienting 
+base image, cropping, merging). This creates a parent class keep the same 
+steps, but overload the areas that differ across methods</p>
+<p>The public attributes that are important:
+wf - the nipype.Workflow</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.DEFAULT_INFLOWS">
+<span class="sig-name descname"><span class="pre">DEFAULT_INFLOWS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'in_file':</span> <span class="pre">None}</span></em><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.DEFAULT_INFLOWS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.DEFAULT_PARAMS">
+<span class="sig-name descname"><span class="pre">DEFAULT_PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'cost':</span> <span class="pre">'corratio',</span> <span class="pre">'crop_end':</span> <span class="pre">False,</span> <span class="pre">'crop_start':</span> <span class="pre">False,</span> <span class="pre">'mean':</span> <span class="pre">False,</span> <span class="pre">'name':</span> <span class="pre">'mcflirt_moco',</span> <span class="pre">'ref_vol':</span> <span class="pre">8,</span> <span class="pre">'report':</span> <span class="pre">True,</span> <span class="pre">'search_angle':</span> <span class="pre">0,</span> <span class="pre">'smooth':</span> <span class="pre">4}</span></em><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.DEFAULT_PARAMS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>create a nipype workflow to run freesurfer’s reconall</p>
+<section id="id10">
+<h2>Parameters<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>sink_directory - file-like str</dt><dd><p>The sink filepath or ‘’</p>
+</dd>
+</dl>
+<p>returns - custom_workflow_constructors.NipibipyWorkflow obj</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.create_report">
+<span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow.create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>create a report</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.crop_image">
+<span class="sig-name descname"><span class="pre">crop_image</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow.crop_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.crop_image" title="Permalink to this definition"></a></dt>
+<dd><p>use nibabel to crop the image</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.motion_correct">
+<span class="sig-name descname"><span class="pre">motion_correct</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow.motion_correct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.motion_correct" title="Permalink to this definition"></a></dt>
+<dd><p>this will be overloaded by all its children</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.rename_outputs">
+<span class="sig-name descname"><span class="pre">rename_outputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow.rename_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.rename_outputs" title="Permalink to this definition"></a></dt>
+<dd><p>standardize the filenames to the workflow name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.reorient_in_file">
+<span class="sig-name descname"><span class="pre">reorient_in_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/motioncorrection_workflows.html#MotionCorrectionWorkflow.reorient_in_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.motioncorrection_workflows.MotionCorrectionWorkflow.reorient_in_file" title="Permalink to this definition"></a></dt>
+<dd><p>make sure the base image given to the motion correction module is 
+a nifti and in a diagonal affine</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.reconall_workflows.</span></span><span class="sig-name descname"><span class="pre">ReconallWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>A parent class to all the individual reconall statuses. Most of the 
+steps will be the same across all types of this module (running/finding 
+freesurfer subject, reorienting important images, generate reports) This 
+creates a parent class keep the same steps, but overload the critical 
+“execute_reconall” method.</p>
+<p>The public attributes that are important:
+wf - the nipype.Workflow</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.DEFAULT_INFLOWS">
+<span class="sig-name descname"><span class="pre">DEFAULT_INFLOWS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'filepath':</span> <span class="pre">None,</span> <span class="pre">'flair':</span> <span class="pre">None,</span> <span class="pre">'subject_id':</span> <span class="pre">None,</span> <span class="pre">'t1s':</span> <span class="pre">[],</span> <span class="pre">'t2':</span> <span class="pre">None}</span></em><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.DEFAULT_INFLOWS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>create a nipype workflow to run freesurfer’s reconall</p>
+<section id="id11">
+<h2>Parameters<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>sink_directory - file-like str</dt><dd><p>The sink filepath or ‘’</p>
+</dd>
+</dl>
+<p>returns - custom_workflow_constructors.NipibipyWorkflow obj</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.create_report">
+<span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>create a report</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.execute_reconall">
+<span class="sig-name descname"><span class="pre">execute_reconall</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.execute_reconall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.execute_reconall" title="Permalink to this definition"></a></dt>
+<dd><p>this will be overloaded by all its children</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.generate_bilateral_rois">
+<span class="sig-name descname"><span class="pre">generate_bilateral_rois</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.generate_bilateral_rois"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_bilateral_rois" title="Permalink to this definition"></a></dt>
+<dd><p>Using a lookup table (defined as a static file in the nipibipy’s
+sub-package) create a bilateral atlas and associated json for the 
+pre-determined atlases</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.generate_gray_matter_mask">
+<span class="sig-name descname"><span class="pre">generate_gray_matter_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.generate_gray_matter_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_gray_matter_mask" title="Permalink to this definition"></a></dt>
+<dd><p>create the gray matter mask by including some rois from the aseg</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.generate_subcortical_mask">
+<span class="sig-name descname"><span class="pre">generate_subcortical_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.generate_subcortical_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_subcortical_mask" title="Permalink to this definition"></a></dt>
+<dd><p>create the white matter mask by including some rois from the aseg</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.generate_ventricle_mask">
+<span class="sig-name descname"><span class="pre">generate_ventricle_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.generate_ventricle_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_ventricle_mask" title="Permalink to this definition"></a></dt>
+<dd><p>create the white matter mask by including some rois from the aseg</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.generate_white_matter_mask">
+<span class="sig-name descname"><span class="pre">generate_white_matter_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.generate_white_matter_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_white_matter_mask" title="Permalink to this definition"></a></dt>
+<dd><p>create the white matter mask by including some rois from the aseg</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.generate_wholebrain_mask">
+<span class="sig-name descname"><span class="pre">generate_wholebrain_mask</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.generate_wholebrain_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.generate_wholebrain_mask" title="Permalink to this definition"></a></dt>
+<dd><p>create a whole brain mask from the aseg</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.params" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.reconall_workflows.ReconallWorkflow.reorient_outflows">
+<span class="sig-name descname"><span class="pre">reorient_outflows</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/reconall_workflows.html#ReconallWorkflow.reorient_outflows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.reconall_workflows.ReconallWorkflow.reorient_outflows" title="Permalink to this definition"></a></dt>
+<dd><p>combine all the reoriented images to one volume and rename the file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">picnic.workflows.tacs_workflows.</span></span><span class="sig-name descname"><span class="pre">TacsWorkflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inflows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow" title="Permalink to this definition"></a></dt>
+<dd><p>A parent class to the individual image convertion modules. Most of the 
+steps will be the same across converters (finding jsons, merging multiple 
+images, etc.). This creates a parent class keep the same steps, but 
+overload the critical “convert_to_nii” method.</p>
+<p>The public attributes that are important:
+wf - the nipype.Workflow</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.DEFAULT_INFLOWS">
+<span class="sig-name descname"><span class="pre">DEFAULT_INFLOWS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'4d_image':</span> <span class="pre">None,</span> <span class="pre">'atlas':</span> <span class="pre">[]}</span></em><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.DEFAULT_INFLOWS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.DEFAULT_PARAMS">
+<span class="sig-name descname"><span class="pre">DEFAULT_PARAMS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'name':</span> <span class="pre">'nibabel_image_import',</span> <span class="pre">'report':</span> <span class="pre">True,</span> <span class="pre">'units':</span> <span class="pre">'uci'}</span></em><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.DEFAULT_PARAMS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.build_workflow">
+<span class="sig-name descname"><span class="pre">build_workflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sink_directory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow.build_workflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.build_workflow" title="Permalink to this definition"></a></dt>
+<dd><p>create a nipype workflow to convert all images provided to a 
+standard imaging file type (nii or nii.gz)</p>
+<section id="id12">
+<h2>Parameters<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h2>
+<dl class="simple">
+<dt>sink_directory - file-like str</dt><dd><p>The sink filepath or ‘’</p>
+</dd>
+</dl>
+<p>returns - custom_workflow_constructors.NipibipyWorkflow obj</p>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.create_report">
+<span class="sig-name descname"><span class="pre">create_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow.create_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.create_report" title="Permalink to this definition"></a></dt>
+<dd><p>create a report</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.create_tacs">
+<span class="sig-name descname"><span class="pre">create_tacs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow.create_tacs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.create_tacs" title="Permalink to this definition"></a></dt>
+<dd><p>create Time Activity Curves using a 4d image and a list of atlases</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.find_associated_jsons">
+<span class="sig-name descname"><span class="pre">find_associated_jsons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow.find_associated_jsons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.find_associated_jsons" title="Permalink to this definition"></a></dt>
+<dd><p>search for any associated jsons</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.rename_outputs">
+<span class="sig-name descname"><span class="pre">rename_outputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow.rename_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.rename_outputs" title="Permalink to this definition"></a></dt>
+<dd><p>standardize the filenames to the workflow name</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="picnic.workflows.tacs_workflows.TacsWorkflow.reorient_all_images">
+<span class="sig-name descname"><span class="pre">reorient_all_images</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/picnic/workflows/tacs_workflows.html#TacsWorkflow.reorient_all_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#picnic.workflows.tacs_workflows.TacsWorkflow.reorient_all_images" title="Permalink to this definition"></a></dt>
+<dd><p>make sure all the images given are niftis and have diagnoal affines</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cards.html" class="btn btn-neutral float-left" title="Base Card and CardBuilder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reporting.html" class="btn btn-neutral float-right" title="Reporting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

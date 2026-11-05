@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>picnic.workflows.image_workflows &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">picnic.workflows.image_workflows</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for picnic.workflows.image_workflows</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =======================================</span>
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Select</span><span class="p">,</span> <span class="n">Rename</span><span class="p">,</span> <span class="n">Merge</span>
+
+<span class="kn">from</span> <span class="nn">picnic.workflows.custom_workflow_constructors</span> <span class="kn">import</span> <span class="n">NipibipyWorkflow</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.nibabel_nodes</span> <span class="kn">import</span> <span class="n">_merge_images</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.io_nodes</span> <span class="kn">import</span> <span class="n">_find_associated_sidecar</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.nilearn_nodes</span> <span class="kn">import</span> <span class="n">_create_report</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.string_template_nodes</span> <span class="kn">import</span> <span class="n">_fill_report_template</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Constants</span>
+<span class="n">REPORT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> 
+    <span class="s1">&#39;report_templates&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;image_template.html&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Classes</span>
+<div class="viewcode-block" id="ImageWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.ImageWorkflow">[docs]</a><span class="k">class</span> <span class="nc">ImageWorkflow</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A parent class to the individual image convertion modules. Most of the </span>
+<span class="sd">    steps will be the same across converters (finding jsons, merging multiple </span>
+<span class="sd">    images, etc.). This creates a parent class keep the same steps, but </span>
+<span class="sd">    overload the critical &quot;convert_to_nii&quot; method.</span>
+<span class="sd">    </span>
+<span class="sd">    The public attributes that are important:</span>
+<span class="sd">    wf - the nipype.Workflow</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DEFAULT_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="s1">&#39;nibabel_image_import&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;report&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">DEFAULT_INFLOWS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;in_files&#39;</span> <span class="p">:</span> <span class="p">[]</span>
+    <span class="p">}</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params - dict</span>
+<span class="sd">            key/value pairs of the keyword&#39;s optional parameters. See the </span>
+<span class="sd">            above DEFAULT_PARAMS constant for a list of all available keys</span>
+<span class="sd">        inflows - dict</span>
+<span class="sd">            the inflows to the workflow, {&quot;inflow name&quot; : file-like str}. See </span>
+<span class="sd">            the above DEFAULT_INFLOWS constant for a list of available keys</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_PARAMS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_INFLOWS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">inflows</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="ImageWorkflow.build_workflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.ImageWorkflow.build_workflow">[docs]</a>    <span class="k">def</span> <span class="nf">build_workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a nipype workflow to convert all images provided to a</span>
+<span class="sd">        standard imaging file type (nii or nii.gz)</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sink_directory - file-like str</span>
+<span class="sd">            The sink filepath or &#39;&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        returns - custom_workflow_constructors.NipibipyWorkflow obj</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span> <span class="o">=</span> <span class="n">NipibipyWorkflow</span><span class="p">(</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">{},</span>
+            <span class="n">sink_directory</span> <span class="o">=</span> <span class="n">sink_directory</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># the workflow steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convert_to_nii</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge_all_images</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_for_jsons</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;report&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_report</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wf</span></div>
+    
+<div class="viewcode-block" id="ImageWorkflow.convert_to_nii"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.ImageWorkflow.convert_to_nii">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_nii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; this will be overloaded by all its children</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+    
+<div class="viewcode-block" id="ImageWorkflow.merge_all_images"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.ImageWorkflow.merge_all_images">[docs]</a>    <span class="k">def</span> <span class="nf">merge_all_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; combine all the reoriented images to one volume and rename the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check if the user provided multiple datalines or not</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+                <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                    <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s1">&#39;images&#39;</span>
+                    <span class="p">],</span>
+                    <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s1">&#39;new_image_path&#39;</span>
+                    <span class="p">],</span>
+                    <span class="n">function</span> <span class="o">=</span> <span class="n">_merge_images</span>
+                <span class="p">),</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;merge&#39;</span><span class="p">,</span>
+                <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;images&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient&#39;</span>
+                <span class="p">},</span>
+                <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">next_step_connection</span> <span class="o">=</span> <span class="s1">&#39;@merge.new_image_path&#39;</span>
+            
+        <span class="c1"># if the user only provide one dataline, select the single image</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+                <span class="n">interface</span> <span class="o">=</span> <span class="n">Select</span><span class="p">(),</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;select&#39;</span><span class="p">,</span>
+                <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;inlist&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="mi">0</span>
+                <span class="p">},</span>
+                <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">next_step_connection</span> <span class="o">=</span> <span class="s1">&#39;@select.out&#39;</span>
+        
+        <span class="c1"># standardize the file name that was just merged/selected</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Rename</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;standardized_filenames&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="n">next_step_connection</span><span class="p">,</span>
+                <span class="s1">&#39;format_string&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.nii.gz&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;out_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageWorkflow.search_for_jsons"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.ImageWorkflow.search_for_jsons">[docs]</a>    <span class="k">def</span> <span class="nf">search_for_jsons</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; search for any associated jsons</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># search for an associated json</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_filepaths&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;sidecar&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_find_associated_sidecar</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;find_sidecar&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_filepaths&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;sidecar&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># standardize the output filenames</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Rename</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;standardized_jsonnames&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@find_sidecar&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;format_string&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.json&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;out_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageWorkflow.create_report"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.ImageWorkflow.create_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a report</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># need to put the out image as a list obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;report_merge&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in1&#39;</span> <span class="p">:</span> <span class="s1">&#39;@standardized_filenames&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># report images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;type_&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;in_files&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;additional_args&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;reports&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_create_report</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;create_report&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;type_&#39;</span> <span class="p">:</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;in_files&#39;</span> <span class="p">:</span> <span class="s1">&#39;@report_merge&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;additional_args&#39;</span> <span class="p">:</span> <span class="p">[</span>
+                    <span class="s1">&#39;image&#39;</span>
+                <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;reports&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;reports&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;html_template&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;parameters&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;html&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_fill_report_template</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;report_template&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;html_template&#39;</span> <span class="p">:</span> <span class="n">REPORT_TEMPLATE_PATH</span><span class="p">,</span>
+                <span class="s1">&#39;parameters&#39;</span> <span class="p">:{</span>
+                    <span class="s1">&#39;method&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;html&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;html&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div></div>
+    
+<div class="viewcode-block" id="NibabelLoadWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.NibabelLoadWorkflow">[docs]</a><span class="k">class</span> <span class="nc">NibabelLoadWorkflow</span><span class="p">(</span><span class="n">ImageWorkflow</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; load an image image using nibabel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params - dict</span>
+<span class="sd">            key/value pairs of the keyword&#39;s optional parameters.</span>
+<span class="sd">        inflows - list</span>
+<span class="sd">            list of file-like strs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;nibabel&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;nibabel&#39;</span>
+    
+<div class="viewcode-block" id="NibabelLoadWorkflow.convert_to_nii"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.NibabelLoadWorkflow.convert_to_nii">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_nii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; use nibabel to load an image modality, extract its affine and </span>
+<span class="sd">        resave it as a nifti gz</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">picnic.interfaces.nibabel_nodes</span> <span class="kn">import</span> <span class="n">_reorient_image</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_file&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_image_path&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_reorient_image</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;reorient&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div></div>
+    
+<div class="viewcode-block" id="Dcm2niixWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.Dcm2niixWorkflow">[docs]</a><span class="k">class</span> <span class="nc">Dcm2niixWorkflow</span><span class="p">(</span><span class="n">ImageWorkflow</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; convert a set of dicoms using dcm2niix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params - dict</span>
+<span class="sd">            key/value pairs of the keyword&#39;s optional parameters.</span>
+<span class="sd">        inflows - list</span>
+<span class="sd">            list of file-like strs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dcm2niix&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dcm2niix&#39;</span>
+    
+<div class="viewcode-block" id="Dcm2niixWorkflow.convert_to_nii"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.Dcm2niixWorkflow.convert_to_nii">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_nii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; use dcm2niix to convert a list of dicoms to nii</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.dcm2nii</span> <span class="kn">import</span> <span class="n">Dcm2niix</span>
+        <span class="kn">from</span> <span class="nn">picnic.interfaces.nibabel_nodes</span> <span class="kn">import</span> <span class="n">_reorient_image</span>
+
+        <span class="c1"># use dcm2niix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Dcm2niix</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;dcm2niix&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;source_dir&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;anon_bids&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;bids_format&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;compress&#39;</span> <span class="p">:</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;out_filename&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;converted_files&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;bids&#39;</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;source_dir&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># reorient all the nii created, I don&#39;t suspect dcm2niix will ever mess</span>
+        <span class="c1">#  up the orientation, but better to be careful</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_file&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_image_path&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_reorient_image</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;reorient&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@dcm2niix&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div></div>
+    
+<div class="viewcode-block" id="Dcm2niiWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.Dcm2niiWorkflow">[docs]</a><span class="k">class</span> <span class="nc">Dcm2niiWorkflow</span><span class="p">(</span><span class="n">ImageWorkflow</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; convert a set of dicoms using dcm2nii</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params - dict</span>
+<span class="sd">            key/value pairs of the keyword&#39;s optional parameters.</span>
+<span class="sd">        inflows - list</span>
+<span class="sd">            list of file-like strs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dcm2nii&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dcm2nii&#39;</span>
+    
+<div class="viewcode-block" id="Dcm2niiWorkflow.convert_to_nii"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.image_workflows.Dcm2niiWorkflow.convert_to_nii">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_nii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; use dcm2niix to convert a list of dicoms to nii</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.dcm2nii</span> <span class="kn">import</span> <span class="n">Dcm2nii</span>
+        <span class="kn">from</span> <span class="nn">picnic.interfaces.nibabel_nodes</span> <span class="kn">import</span> <span class="n">_reorient_image</span>
+
+        <span class="c1"># use dcm2nii</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Dcm2nii</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;dcm2nii&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;source_dir&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;anonymize&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;gzip_output&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;converted_files&#39;</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;source_dir&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># reorient all the nii created, I don&#39;t suspect dcm2nii will ever mess</span>
+        <span class="c1">#  up the orientation, but better to be careful</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_file&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_image_path&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_reorient_image</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;reorient&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@dcm2nii&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div></div>
+    
+<span class="c1"># =======================================</span>
+<span class="c1"># Functions</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Nipype Specific Functions</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

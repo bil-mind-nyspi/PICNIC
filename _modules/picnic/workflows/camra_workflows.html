@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>picnic.workflows.camra_workflows &mdash; PICNIC 0.2.1 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            PICNIC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../run.html">The run module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html">Base Card and CardBuilder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cards.html#functional-cards">Functional Cards</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../workflows.html">PICNIC Nodes and Workflows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reporting.html">Reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">PICNIC Version history and change log</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PICNIC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">picnic.workflows.camra_workflows</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for picnic.workflows.camra_workflows</h1><div class="highlight"><pre>
+<span></span><span class="c1"># =======================================</span>
+<span class="c1"># Imports</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Merge</span><span class="p">,</span> <span class="n">Select</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.fsl.maths</span> <span class="kn">import</span> <span class="n">ApplyMask</span><span class="p">,</span> <span class="n">BinaryMaths</span><span class="p">,</span> <span class="n">MathsCommand</span>
+
+<span class="kn">from</span> <span class="nn">picnic.interfaces.nibabel_nodes</span> <span class="kn">import</span> <span class="n">_reorient_image</span><span class="p">,</span> <span class="n">_crop_image</span><span class="p">,</span> <span class="n">_binarize_images</span><span class="p">,</span> <span class="n">_resample_image</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.io_nodes</span> <span class="kn">import</span> <span class="n">_rename_image</span><span class="p">,</span> <span class="n">_find_associated_sidecar</span><span class="p">,</span> <span class="n">_rename_textfile</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.nilearn_nodes</span> <span class="kn">import</span> <span class="n">_create_report</span>
+<span class="kn">from</span> <span class="nn">picnic.interfaces.string_template_nodes</span> <span class="kn">import</span> <span class="n">_fill_report_template</span>
+<span class="kn">from</span> <span class="nn">picnic.workflows.custom_workflow_constructors</span> <span class="kn">import</span> <span class="n">NipibipyWorkflow</span>
+
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Constants</span>
+<span class="n">PROBABILISTIC_WMMASK_MULTIPLIER</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">PROBABILISTIC_GMMASK_MULTIPLIER</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+<span class="n">REPORT_TEMPLATE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span> 
+    <span class="s1">&#39;report_templates&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;coregistration_template.html&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Classes</span>
+<div class="viewcode-block" id="CamraWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow">[docs]</a><span class="k">class</span> <span class="nc">CamraWorkflow</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; C-AMRA (Coregistration - Automated Multi-Run Approach) is complex and </span>
+<span class="sd">    requires a couple different steps. This parent class will contain the </span>
+<span class="sd">    repeatable steps. The children classes contain the unique steps.</span>
+<span class="sd">    </span>
+<span class="sd">    The public attributes that are important:</span>
+<span class="sd">    wf - the nipype.Workflow</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DEFAULT_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="s1">&#39;lcf_camra&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cost&#39;</span> <span class="p">:</span> <span class="s1">&#39;mutualinfo&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;dof&#39;</span> <span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s1">&#39;crop_start&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s1">&#39;crop_end&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s1">&#39;smooth&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s1">&#39;search_angle&#39;</span> <span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+        <span class="s1">&#39;rank&#39;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s1">&#39;ct&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s1">&#39;report&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">DEFAULT_INFLOWS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;4d_image&#39;</span> <span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;t1&#39;</span> <span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;brain&#39;</span> <span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;wmmask&#39;</span> <span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;gmmask&#39;</span> <span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s1">&#39;ct&#39;</span> <span class="p">:</span> <span class="kc">None</span>
+    <span class="p">}</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params - dict</span>
+<span class="sd">            key/value pairs of the keyword&#39;s optional parameters. See the </span>
+<span class="sd">            above DEFAULT_PARAMS constant for a list of all available keys</span>
+<span class="sd">        inflows - dict</span>
+<span class="sd">            the inflows to the workflow, {&quot;inflow name&quot; : file-like str}. See </span>
+<span class="sd">            the above DEFAULT_INFLOWS constant for a list of available keys</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_PARAMS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_INFLOWS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">inflows</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="CamraWorkflow.build_workflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.build_workflow">[docs]</a>    <span class="k">def</span> <span class="nf">build_workflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sink_directory</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a nipype workflow to run freesurfer&#39;s reconall</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sink_directory - file-like str</span>
+<span class="sd">            The sink filepath or &#39;&#39;</span>
+<span class="sd">        </span>
+<span class="sd">        returns - custom_workflow_constructors.NipibipyWorkflow obj</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span> <span class="o">=</span> <span class="n">NipibipyWorkflow</span><span class="p">(</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">{},</span>
+            <span class="n">sink_directory</span> <span class="o">=</span> <span class="n">sink_directory</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># the workflow steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reorient_in_files</span><span class="p">()</span>
+        
+        <span class="c1"># create sources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crop_image</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;ct&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pet_brainmask_from_ct</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="c1"># create targets</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;brain&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_brainmask_from_t1</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;wmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;gmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">segment_t1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_gm_and_wmmasked_t1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gmmask_t1</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_probabilistic_mask</span><span class="p">()</span>
+        
+        <span class="c1"># coregister sources to targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coregister</span><span class="p">()</span>
+        
+        <span class="c1"># pick the best coregistration (it will be overloaded by type)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pick_best_coregistration</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">rename_outputs</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;report&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_report</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wf</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.reorient_in_files"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.reorient_in_files">[docs]</a>    <span class="k">def</span> <span class="nf">reorient_in_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; make sure all the images given are niftis and have diagnoal affines</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+                    <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                        <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;gz&#39;</span>
+                        <span class="p">],</span>
+                        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="s1">&#39;new_image_path&#39;</span>
+                        <span class="p">],</span>
+                        <span class="n">function</span> <span class="o">=</span> <span class="n">_reorient_image</span>
+                    <span class="p">),</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;reorient_&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">,</span>
+                    <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="n">val</span><span class="p">,</span>
+                        <span class="s1">&#39;gz&#39;</span> <span class="p">:</span> <span class="kc">False</span>
+                    <span class="p">},</span>
+                    <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.crop_image"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.crop_image">[docs]</a>    <span class="k">def</span> <span class="nf">crop_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; use nibabel to crop the image</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">IsotropicSmooth</span><span class="p">,</span> <span class="n">MeanImage</span>
+
+        
+        <span class="c1"># Crop out starting or ending frames for time averaging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;crop_start&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;crop_end&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_image_path&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_crop_image</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;crop_image&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_4d_image&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;crop_start&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;crop_start&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;crop_end&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;crop_end&#39;</span><span class="p">]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">last_node_name</span> <span class="o">=</span> <span class="s1">&#39;@crop_image&#39;</span>
+        
+        <span class="c1"># smooth the image</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;smooth&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+                <span class="n">interface</span> <span class="o">=</span> <span class="n">IsotropicSmooth</span><span class="p">(),</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;smooth&#39;</span><span class="p">,</span>
+                <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@crop_image&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;fwhm&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;smooth&#39;</span><span class="p">]</span>
+                <span class="p">},</span>
+                <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">last_node_name</span> <span class="o">=</span> <span class="s1">&#39;@smooth&#39;</span>
+        
+        <span class="c1"># time average the 4d image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">MeanImage</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;tmean&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;dimension&#39;</span> <span class="p">:</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="n">last_node_name</span><span class="p">,</span>
+                <span class="s1">&#39;output_type&#39;</span> <span class="p">:</span> <span class="s1">&#39;NIFTI&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.pet_brainmask_from_ct"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.pet_brainmask_from_ct">[docs]</a>    <span class="k">def</span> <span class="nf">pet_brainmask_from_ct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a brainmask from the ct</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">BET</span>
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl.maths</span> <span class="kn">import</span> <span class="n">MathsCommand</span><span class="p">,</span> <span class="n">ApplyMask</span>
+
+        
+        <span class="c1"># Filter out non brain and smooth the image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">MathsCommand</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;ct_math&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;args&#39;</span> <span class="p">:</span> <span class="s1">&#39;-thr 0 -uthr 100 -s 1.0&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_ct&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># use bet2 to create a brainmask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">BET</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;bet_ctmask&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@ct_math&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;frac&#39;</span> <span class="p">:</span> <span class="mf">0.35</span><span class="p">,</span>
+                <span class="s1">&#39;mask&#39;</span> <span class="p">:</span> <span class="kc">True</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;mask_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># resample the ctmask to pet space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;source&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;target&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;resampled_image&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_resample_image</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;resample_ct_to_pet&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;source&#39;</span> <span class="p">:</span> <span class="s1">&#39;@bet_ctmask&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;target&#39;</span> <span class="p">:</span> <span class="s1">&#39;@tmean&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;resampled_image&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># use the created brainmask to zero out non-brain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">ApplyMask</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;apply_ctmask&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@tmean&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;mask_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@resample_ct_to_pet&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;output_type&#39;</span> <span class="p">:</span> <span class="s1">&#39;NIFTI&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+        
+<div class="viewcode-block" id="CamraWorkflow.create_brainmask_from_t1"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.create_brainmask_from_t1">[docs]</a>    <span class="k">def</span> <span class="nf">create_brainmask_from_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a brainmask using BET</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">BET</span>
+
+        <span class="c1"># Use bet2 to create a brainmask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">BET</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;bet_brainmask&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;output_type&#39;</span> <span class="p">:</span> <span class="s1">&#39;NIFTI&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+        
+<div class="viewcode-block" id="CamraWorkflow.segment_t1"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.segment_t1">[docs]</a>    <span class="k">def</span> <span class="nf">segment_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; segment the t1 using FAST</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.spm</span> <span class="kn">import</span> <span class="n">Segment</span>
+
+        
+        <span class="c1"># Use FAST to segement the t1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Segment</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;segment_t1&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;data&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;native_gm_image&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;native_wm_image&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+        
+<div class="viewcode-block" id="CamraWorkflow.create_gm_and_wmmasked_t1"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.create_gm_and_wmmasked_t1">[docs]</a>    <span class="k">def</span> <span class="nf">create_gm_and_wmmasked_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a target image for the combined masks of grey and white masks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Get the inflow/outflows for the grey and white matter masks</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;wmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wm</span> <span class="o">=</span> <span class="s1">&#39;@segment_t1.native_wm_image&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wm</span> <span class="o">=</span> <span class="s1">&#39;@reorient_wmmask.new_image_path&#39;</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;gmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="s1">&#39;@segment_t1.native_gm_image&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="s1">&#39;@reorient_gmmask.new_image_path&#39;</span>
+        
+        <span class="c1"># create list from those inflows/outflows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;merge_segmentation_outflows&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in1&#39;</span> <span class="p">:</span> <span class="n">wm</span><span class="p">,</span>
+                <span class="s1">&#39;in2&#39;</span> <span class="p">:</span> <span class="n">gm</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># merge the two masks into one and binarize the image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;images&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_image_path&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_binarize_images</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;binarize_segmentations&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;images&#39;</span> <span class="p">:</span> <span class="s1">&#39;@merge_segmentation_outflows&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># apply the mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">ApplyMask</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;gmwmmasked_t1&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;mask_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@binarize_segmentations&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;output_type&#39;</span> <span class="p">:</span> <span class="s1">&#39;NIFTI&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.gmmask_t1"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.gmmask_t1">[docs]</a>    <span class="k">def</span> <span class="nf">gmmask_t1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a target image for the gmmask-ed t1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># find which inflow to use for the gmmask</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;gmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="s1">&#39;@segment_t1.native_gm_image&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="s1">&#39;@reorient_gmmask.new_image_path&#39;</span>
+        
+        <span class="c1"># apply the mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">ApplyMask</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;gmmasked_t1&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;mask_file&#39;</span> <span class="p">:</span> <span class="n">gm</span><span class="p">,</span>
+                <span class="s1">&#39;output_type&#39;</span> <span class="p">:</span> <span class="s1">&#39;NIFTI&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.create_probabilistic_mask"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.create_probabilistic_mask">[docs]</a>    <span class="k">def</span> <span class="nf">create_probabilistic_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a target image where we artificially lower the white matter</span>
+<span class="sd">        intensities by half, keep the grey matter the same and zero out </span>
+<span class="sd">        everything else</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get the inflow/outflows for the grey and white matter masks</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;wmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wm</span> <span class="o">=</span> <span class="s1">&#39;@segment_t1.native_wm_image&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wm</span> <span class="o">=</span> <span class="s1">&#39;@reorient_wmmask.new_image_path&#39;</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;gmmask&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="s1">&#39;@segment_t1.native_gm_image&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gm</span> <span class="o">=</span> <span class="s1">&#39;@reorient_gmmask.new_image_path&#39;</span>
+        
+        <span class="c1"># multiply the white matter mask by the multiplier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">BinaryMaths</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;wmmask_multiplier&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="n">wm</span><span class="p">,</span>
+                <span class="s1">&#39;operation&#39;</span> <span class="p">:</span> <span class="s1">&#39;mul&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;operand_value&#39;</span> <span class="p">:</span> <span class="n">PROBABILISTIC_WMMASK_MULTIPLIER</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># multiply the grey matter mask by the multiplier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">BinaryMaths</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;gmmask_multiplier&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="n">gm</span><span class="p">,</span>
+                <span class="s1">&#39;operation&#39;</span> <span class="p">:</span> <span class="s1">&#39;mul&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;operand_value&#39;</span> <span class="p">:</span> <span class="n">PROBABILISTIC_GMMASK_MULTIPLIER</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># add the two masks together</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">BinaryMaths</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;combine_masks&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@wmmask_multiplier&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;operation&#39;</span> <span class="p">:</span> <span class="s1">&#39;add&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;operand_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@gmmask_multiplier&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># multiply the t1 by our &quot;probablistic&quot; mask</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">BinaryMaths</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;create_probabilistic_mask&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;operation&#39;</span> <span class="p">:</span> <span class="s1">&#39;mul&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;operand_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@combine_masks&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;output_type&#39;</span> <span class="p">:</span> <span class="s1">&#39;NIFTI&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.coregister"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.coregister">[docs]</a>    <span class="k">def</span> <span class="nf">coregister</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; coregister each source to each target using different registration</span>
+<span class="sd">        softwares</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">FLIRT</span>
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.spm</span> <span class="kn">import</span> <span class="n">Coregister</span>
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl.maths</span> <span class="kn">import</span> <span class="n">MathsCommand</span>
+
+        
+        <span class="c1"># sources</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;@tmean.out_file&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;ct&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;@apply_ctmask.out_file&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># targets</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;@reorient_t1.new_image_path&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;@reorient_brain.new_image_path&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;@gmwmmasked_t1.out_file&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;@gmmasked_t1.out_file&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;@create_probabilistic_mask.out_file&#39;</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;brain&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">targets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;@bet_brainmask.out_file&#39;</span>
+        
+        <span class="c1"># create flat lists of each iterable</span>
+        <span class="c1">#  a more elegant solution would be to use nipype&#39;s iterable methodology</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">targets</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span>
+        
+        <span class="c1"># create a merge list from source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;merge_source_list&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([[</span><span class="s1">&#39;in&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">s</span><span class="p">)]),</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># create a merge list from target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;merge_target_list&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([[</span><span class="s1">&#39;in&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t</span><span class="p">)]),</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># run flirt</span>
+        <span class="n">flirt_inflows</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;bins&#39;</span> <span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+            <span class="s1">&#39;dof&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dof&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@merge_source_list&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;reference&#39;</span> <span class="p">:</span> <span class="s1">&#39;@merge_target_list&#39;</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]:</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;coarse_search&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">]</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;fine_search&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">3</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;searchr_x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">]]</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;searchr_y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">]]</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;searchr_z&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]:</span>
+                <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;cost_func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flirt_inflows</span><span class="p">[</span><span class="s1">&#39;no_search&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">FLIRT</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;flirt_coregistration&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="n">flirt_inflows</span><span class="p">,</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # prepare spm for its coregistration</span>
+<span class="sd">        self.wf.add_mapnode(</span>
+<span class="sd">            interface = Function(</span>
+<span class="sd">                input_names = [</span>
+<span class="sd">                    &#39;source&#39;,</span>
+<span class="sd">                    &#39;target&#39;</span>
+<span class="sd">                ],</span>
+<span class="sd">                output_names = [</span>
+<span class="sd">                    &#39;sources&#39;</span>
+<span class="sd">                ],</span>
+<span class="sd">                function = _move_source</span>
+<span class="sd">            ),</span>
+<span class="sd">            name = &#39;move_source_for_spm&#39;,</span>
+<span class="sd">            inflows = {</span>
+<span class="sd">                &#39;source&#39; : &#39;@merge_source_list&#39;,</span>
+<span class="sd">                &#39;target&#39; : &#39;@merge_target_list&#39;</span>
+<span class="sd">            },</span>
+<span class="sd">            outflows = (</span>
+<span class="sd">                &#39;sources&#39;,</span>
+<span class="sd">            ),</span>
+<span class="sd">            iterfield = [</span>
+<span class="sd">                &#39;source&#39;,</span>
+<span class="sd">                &#39;target&#39;</span>
+<span class="sd">            ]</span>
+<span class="sd">        )</span>
+<span class="sd">        </span>
+<span class="sd">        # coregister with spm</span>
+<span class="sd">        self.wf.add_mapnode(</span>
+<span class="sd">            interface = Coregister(),</span>
+<span class="sd">            name = &#39;spmcoregister_coregistration&#39;,</span>
+<span class="sd">            inflows = {</span>
+<span class="sd">                &#39;source&#39; : &#39;@move_source_for_spm&#39;,</span>
+<span class="sd">                &#39;target&#39; : &#39;@merge_target_list&#39;,</span>
+<span class="sd">                &#39;cost_function&#39; : &#39;mi&#39;</span>
+<span class="sd">            },</span>
+<span class="sd">            outflows = (</span>
+<span class="sd">                &#39;coregistered_source&#39;,</span>
+<span class="sd">            ),</span>
+<span class="sd">            iterfield = [</span>
+<span class="sd">                &#39;source&#39;,</span>
+<span class="sd">                &#39;target&#39;</span>
+<span class="sd">            ]</span>
+<span class="sd">        )</span>
+<span class="sd">        </span>
+<span class="sd">        # flirt cannot handle the NaNs created by spm used in implict masking.</span>
+<span class="sd">        #  Use fslmaths to convert to zero for better cross software comparison</span>
+<span class="sd">        self.wf.add_mapnode(</span>
+<span class="sd">            interface = MathsCommand(),</span>
+<span class="sd">            name = &#39;remove_nans&#39;,</span>
+<span class="sd">            inflows = {</span>
+<span class="sd">                &#39;in_file&#39; : &#39;@spmcoregister_coregistration&#39;,</span>
+<span class="sd">                &#39;nan2zeros&#39; : True,</span>
+<span class="sd">                &#39;output_type&#39; : &#39;NIFTI_GZ&#39;</span>
+<span class="sd">            },</span>
+<span class="sd">            outflows = (</span>
+<span class="sd">                &#39;out_file&#39;,</span>
+<span class="sd">            ),</span>
+<span class="sd">            iterfield = [</span>
+<span class="sd">                &#39;in_file&#39;</span>
+<span class="sd">            ]</span>
+<span class="sd">        )</span>
+<span class="sd">        </span>
+<span class="sd">        # merge spm and fsl coregistrations</span>
+<span class="sd">        self.wf.add_node(</span>
+<span class="sd">            interface = Merge(2),</span>
+<span class="sd">            name = &#39;merge_coregs&#39;,</span>
+<span class="sd">            inflows = {</span>
+<span class="sd">                &#39;in1&#39; : &#39;@flirt_coregistration&#39;,</span>
+<span class="sd">                &#39;in2&#39; : &#39;@remove_nans&#39;</span>
+<span class="sd">            },</span>
+<span class="sd">            outflows = (</span>
+<span class="sd">                &#39;out&#39;,</span>
+<span class="sd">            )</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="CamraWorkflow.pick_best_coregistration"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.pick_best_coregistration">[docs]</a>    <span class="k">def</span> <span class="nf">pick_best_coregistration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; this will be overloaded by all its children</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.rename_outputs"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.rename_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">rename_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; standardize the filenames to the workflow name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># search for an associated json</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_filepaths&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;sidecar&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_find_associated_sidecar</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;find_sidecar&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_filepaths&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inflows</span><span class="p">[</span><span class="s1">&#39;4d_image&#39;</span><span class="p">]]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;sidecar&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># standardize the mask name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;basename&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;sidecar&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;new_sidecar&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_rename_image</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;standarized_filenames&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;basename&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@apply_best_xfm&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;sidecar&#39;</span> <span class="p">:</span> <span class="s1">&#39;@find_sidecar&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;new_sidecar&#39;</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;new_image_path&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;new_sidecar&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># standardize the mask name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;basename&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;in_file&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;new_path&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_rename_textfile</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;standarized_mat_file&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;basename&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@select_best_coreg&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;new_path&#39;</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;new_path&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div>
+    
+<div class="viewcode-block" id="CamraWorkflow.create_report"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.CamraWorkflow.create_report">[docs]</a>    <span class="k">def</span> <span class="nf">create_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; create a report</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># need to put the out image as a list obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;report_merge&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in1&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;in2&#39;</span> <span class="p">:</span> <span class="s1">&#39;@standarized_filenames.new_image_path&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># report images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;type_&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;in_files&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;additional_args&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;reports&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_create_report</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;create_report&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;type_&#39;</span> <span class="p">:</span> <span class="s1">&#39;coregistration&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;in_files&#39;</span> <span class="p">:</span> <span class="s1">&#39;@report_merge&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;additional_args&#39;</span> <span class="p">:</span> <span class="p">[</span>
+                    <span class="s1">&#39;coregistration&#39;</span>
+                <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;reports&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;reports&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;html_template&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;parameters&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;html&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_fill_report_template</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;report_template&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;html_template&#39;</span> <span class="p">:</span> <span class="n">REPORT_TEMPLATE_PATH</span><span class="p">,</span>
+                <span class="s1">&#39;parameters&#39;</span> <span class="p">:{</span>
+                    <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;cost&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;dof&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;dof&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;crop_start&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;crop_start&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;crop_end&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;crop_end&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;smooth&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;smooth&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;search_angle&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;search_angle&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;ct&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ct&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;rank&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;rank&#39;</span><span class="p">]</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;html&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">to_sink</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;html&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span></div></div>
+    
+<div class="viewcode-block" id="LcfCamraWorkflow"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.LcfCamraWorkflow">[docs]</a><span class="k">class</span> <span class="nc">LcfCamraWorkflow</span><span class="p">(</span><span class="n">CamraWorkflow</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; child object using flirt to motion correct</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">inflows</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params - dict</span>
+<span class="sd">            key/value pairs of the keyword&#39;s optional parameters.</span>
+<span class="sd">        inflows - dict</span>
+<span class="sd">            key/value pairs for the inflows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">params</span><span class="p">,</span>
+            <span class="n">inflows</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;lcf&#39;</span>
+    
+<div class="viewcode-block" id="LcfCamraWorkflow.pick_best_coregistration"><a class="viewcode-back" href="../../../workflows.html#picnic.workflows.camra_workflows.LcfCamraWorkflow.pick_best_coregistration">[docs]</a>    <span class="k">def</span> <span class="nf">pick_best_coregistration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; use the Lowest Cost Function (LCF) method to pick the best </span>
+<span class="sd">        coregistration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">FLIRT</span><span class="p">,</span> <span class="n">ApplyXFM</span><span class="p">,</span> <span class="n">MeanImage</span>
+        <span class="kn">from</span> <span class="nn">picnic.interfaces.custom_fsl_interfaces</span> <span class="kn">import</span> <span class="n">ApplyXfm4D</span>
+
+        
+        <span class="c1"># Merge inputs into the coregistration so we have apples to apples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Merge</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;merge_all_sources&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in1&#39;</span> <span class="p">:</span> <span class="s1">&#39;@merge_source_list&#39;</span><span class="p">,</span>
+                <span class="c1"># &#39;in2&#39; : &#39;@merge_source_list&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># get the mats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">FLIRT</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;get_mats_from_coregs&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@merge_all_sources&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference&#39;</span> <span class="p">:</span> <span class="s1">&#39;@flirt_coregistration&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;cost&#39;</span> <span class="p">:</span> <span class="s1">&#39;corratio&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;dof&#39;</span> <span class="p">:</span> <span class="mi">6</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># tmean the entire pet image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">MeanImage</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;tmean_wholepet&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;dimension&#39;</span> <span class="p">:</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_4d_image&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># apply those mats to the whole 4d image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">ApplyXFM</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;applyxfm_to_all_coregs&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@tmean_wholepet&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;apply_xfm&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;in_matrix_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@get_mats_from_coregs&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_matrix_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># use a function to create a flirt schedule file that points to an </span>
+        <span class="c1">#  output file to save the cost function scalar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;in_file&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;schedule&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;cost_file&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_create_schedules</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;create_schedules&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@applyxfm_to_all_coregs&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;schedule&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;cost_file&#39;</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># use the just created schedule with flirt</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="s1">&#39;mutualinfo&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_mapnode</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">FLIRT</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;flirt_schedule&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@applyxfm_to_all_coregs&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;schedule&#39;</span> <span class="p">:</span> <span class="s1">&#39;@create_schedules.schedule&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;cost&#39;</span> <span class="p">:</span> <span class="n">c</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">iterfield</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;schedule&#39;</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># use a function to loop over all the schedules and find the lowest</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;cost_files&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;coregistered_files&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;rank&#39;</span>
+                <span class="p">],</span>
+                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;lcf_idx&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;rank_list&#39;</span>
+                <span class="p">],</span>
+                <span class="n">function</span> <span class="o">=</span> <span class="n">_read_lowest_cost</span>
+            <span class="p">),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;lcf&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;cost_files&#39;</span> <span class="p">:</span> <span class="s1">&#39;@create_schedules.cost_file&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;coregistered_files&#39;</span> <span class="p">:</span> <span class="s1">&#39;@flirt_schedule&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;rank&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;rank&#39;</span><span class="p">]</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;lcf_idx&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;rank_list&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># select the best coreg from the lcf function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">Select</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;select_best_coreg&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="s1">&#39;@lcf.lcf_idx&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;inlist&#39;</span> <span class="p">:</span> <span class="s1">&#39;@get_mats_from_coregs&#39;</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># use the applyxfm4d executable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wf</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">interface</span> <span class="o">=</span> <span class="n">ApplyXfm4D</span><span class="p">(),</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;apply_best_xfm&#39;</span><span class="p">,</span>
+            <span class="n">inflows</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;in_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_4d_image&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;ref_vol&#39;</span> <span class="p">:</span> <span class="s1">&#39;@reorient_t1&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;xfm_file&#39;</span> <span class="p">:</span> <span class="s1">&#39;@select_best_coreg&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;single_matrix&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">outflows</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div></div>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Functions</span>
+
+<span class="c1"># =======================================</span>
+<span class="c1"># Nipype Specific Functions</span>
+<span class="k">def</span> <span class="nf">_move_source</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; I&#39;m noticing that spm is not translating the source image to start </span>
+<span class="sd">    next to the target image (despite the implication that it should). If I </span>
+<span class="sd">    move the source image manually, spm coregistration works great, but it </span>
+<span class="sd">    requires and additional step that I&#39;m not loving. This is a way to do that </span>
+<span class="sd">    initial step</span>
+<span class="sd">    </span>
+<span class="sd">    Paramters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    source - file-like str</span>
+<span class="sd">        filepath of the mean source image</span>
+<span class="sd">    target - file-like str</span>
+<span class="sd">        filepath of the target</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
+
+    <span class="c1"># load target</span>
+    <span class="n">target_image</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+    <span class="n">target_center</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">target_image</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">target_image</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">()[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span>
+             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">target_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># get the file names</span>
+    <span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">basename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">basename</span><span class="o">+</span><span class="s1">&#39;_moved.nii&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># load source</span>
+    <span class="n">in_image</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">in_center</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">in_image</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">in_image</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">()[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span>
+             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">in_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)</span>
+    <span class="p">)</span>
+    
+    <span class="c1"># find how much to translate</span>
+    <span class="n">translate</span> <span class="o">=</span> <span class="n">target_center</span> <span class="o">-</span> <span class="n">in_center</span>
+    
+    <span class="n">new_affine</span> <span class="o">=</span> <span class="n">in_image</span><span class="o">.</span><span class="n">affine</span>
+    <span class="n">new_affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">translate</span>
+    <span class="n">new_image</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">in_image</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">(),</span> <span class="n">new_affine</span><span class="p">)</span>
+    <span class="n">nib</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">new_image</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">filepath</span>
+
+<span class="k">def</span> <span class="nf">_create_schedules</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;lcf_schedule.txt&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; use create a custom schedule file to be used in accordance with flirt</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_file - file-like str</span>
+<span class="sd">        the filepath of the 4d pet image</span>
+<span class="sd">    filename - str</span>
+<span class="sd">        the name of the schedule file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+
+    <span class="c1"># get the names</span>
+    <span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
+    <span class="n">basename</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">full_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">basename</span><span class="o">+</span><span class="s1">&#39;_schedule.txt&#39;</span><span class="p">)</span>
+    <span class="n">cost_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">basename</span><span class="o">+</span><span class="s1">&#39;_cost.txt&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># write out the schedule file</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">full_filepath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;setscale 1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;setrow UX 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;measurecost 6 UX 0 0 0 0 0 0 abs</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;save U &#39;</span> <span class="o">+</span> <span class="n">cost_file</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">full_filepath</span><span class="p">,</span> <span class="n">cost_file</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_read_lowest_cost</span><span class="p">(</span><span class="n">cost_files</span><span class="p">,</span> <span class="n">coregistered_files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; load the flirt cost files and rank them</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cost_files - list</span>
+<span class="sd">        the </span>
+<span class="sd">    coregistered_files - list or None</span>
+<span class="sd">        not actually used but making this connection forces nipype to run this</span>
+<span class="sd">        function after creating the schedule</span>
+<span class="sd">    rank - int</span>
+<span class="sd">        the rank of the cost files to use (default is 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+
+    <span class="c1"># loop over all the cost files from flirt schedule</span>
+    <span class="n">all_costs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cost_files</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">all_lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">all_lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">all_costs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+    
+    <span class="n">rank_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">rankdata</span><span class="p">(</span><span class="n">all_costs</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;ordinal&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="p">(</span><span class="n">rank_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">rank</span><span class="p">),</span> <span class="n">rank_list</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_grab_flirt_transforms</span><span class="p">(</span><span class="n">in_mat_files</span><span class="p">,</span> <span class="n">crop_start</span><span class="p">,</span> <span class="n">original_image</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; a nipype function used to take all the xfm matrices and put them in one </span>
+<span class="sd">    place with a standardized naming convention</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_mat_files - list, tuple</span>
+<span class="sd">        a list of transform matrices</span>
+<span class="sd">    crop_start - int</span>
+<span class="sd">        how many frames we crop out of the start of image</span>
+<span class="sd">    original_image - file-like str</span>
+<span class="sd">        the original, un-motion corrected image. This determines how many frames</span>
+<span class="sd">        we need</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">shutil</span>
+    <span class="kn">import</span> <span class="nn">glob</span>
+    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
+
+
+    <span class="c1"># if tuple, force to be list</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_mat_files</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">in_mat_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">in_mat_files</span><span class="p">]</span>
+    
+    <span class="c1"># set up flags</span>
+    <span class="n">check_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="c1"># use the first transformation matrix for all the beginning skipped frames</span>
+    <span class="k">while</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">crop_start</span><span class="p">:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">in_mat_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">check_dir</span><span class="p">,</span> <span class="s1">&#39;MAT_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+    <span class="c1"># loop over all the transformation matrices and copy them to the working dir</span>
+    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">in_mat_files</span><span class="p">:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">check_dir</span><span class="p">,</span> <span class="s1">&#39;MAT_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># use the last transformation matrix for all the ending skipped frames</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">original_image</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">in_mat_files</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">check_dir</span><span class="p">,</span> <span class="s1">&#39;MAT_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+    <span class="n">all_mats</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;MAT_*&#39;</span><span class="p">)</span>
+    <span class="n">all_mats</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_mats</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">check_dir</span><span class="p">,</span> <span class="n">all_mats</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, The NYSPI MIND Brain Imaging Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
