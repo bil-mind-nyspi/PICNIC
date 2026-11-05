@@ -92,7 +92,7 @@ publications from [our Lab](https://www.columbiapsychiatry.org/research-labs/bra
 @Zanderigo2025MicrotubuleTRT; @Zanderigo2025TSPOSIME; @Zanderigo2026MicrotubulesTRT;
 @Bartlett2026TSPOMAOA; @Bartlett2026OpenNeuroSTARE; @Laurell2026MCP6827;
 @Laurell2026ER176; @Restifo2026Celecoxib; @Bartlett2026NonbrainTSPO]
-and is being validated externally alongside other pipelines [@Haver2026Comparison]. PICNIC’s
+and has been validated externally alongside other pipelines [@Haver2026Comparison]. PICNIC’s
 modular nature enables extensive customization of preprocessing for a variety of
 brain PET studies, and its design may allow future extension to preprocessing of
 data from imaging modalities other than PET. The source code for PICNIC is
