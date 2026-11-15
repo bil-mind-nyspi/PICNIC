@@ -3,6 +3,10 @@
 PICNIC Version history and change log
 =====================================
 
+Version 0.2.2
+
+- Added FSL tools to docker image via fsl-avwutils conda package
+
 Version 0.2.1
 
 - Updated python libraries in environment.txt and matched them to env.yml
