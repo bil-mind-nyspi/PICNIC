@@ -8,8 +8,6 @@ import json
 import string
 import logging
 
-from six import reraise
-
 from picnic.cards import get_path_to_json
 
 
