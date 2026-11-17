@@ -9,7 +9,7 @@
 project = 'PICNIC'
 copyright = '2026, The NYSPI MIND Brain Imaging Lab'
 author = 'The NYSPI MIND Brain Imaging Lab'
-release = '0.2.1'
+release = '0.2.2'
 
 
 # -- General configuration ---------------------------------------------------

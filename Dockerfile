@@ -163,6 +163,11 @@ WORKDIR /tmp
 RUN micromamba create -y -f /tmp/env.yml && \
     micromamba clean -y -a
 
+# If we need an FSL package that isn't installed, fail now rather than later.
+RUN for t in fslmaths fslinfo fslhd fslstats fslroi fslsplit flirt mcflirt bet applyxfm4D; do \
+    test -x "/opt/conda/envs/picnic/bin/$t" || { echo "Missing FSL tool: $t" >&2; exit 1; }; \
+    done
+
 # =============================================================================
 # Main stage
 #
@@ -309,8 +314,8 @@ RUN pip install --no-cache-dir $( ls *.whl ) \
 WORKDIR /tmp
 ENTRYPOINT ["/opt/conda/envs/picnic/bin/python3", "/opt/conda/envs/picnic/bin/run.py"]
 
-ARG BUILD_DATE=2026-10-20
-ARG PICNIC_VERSION=0.2.1
+ARG BUILD_DATE=2026-11-15
+ARG PICNIC_VERSION=0.2.2
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="PICNIC" \
       org.label-schema.description="PICNIC - A modular PET preprocessing tool" \

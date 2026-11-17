@@ -51,7 +51,7 @@ correctly. To do this, you specify the paths as they exist in your
 host environment. But in your input deck, you need to specify the
 paths as they exist inside the docker container. If you need to
 read input data from `/home/username/pet_data/rawdata/sub-01/` and
-write it to `/home/username/pet_data/derivatives/picnic_0.2.1/sub-01/`, and
+write it to `/home/username/pet_data/derivatives/picnic_0.2.2/sub-01/`, and
 execute the commands in input deck `/home/username/sub-01_processing.inp`,
 you could use the following command:
 
@@ -60,7 +60,7 @@ you could use the following command:
    ./scripts/run_picnic_in_docker \
    /home/username/sub-01_processing.inp \
    /home/username/pet_data/rawdata \
-   /home/username/pet_data/derivatives/picnic_0.2.1 \
+   /home/username/pet_data/derivatives/picnic_0.2.2 \
    /usr/local/freesurfer/license.txt
 
 In this case, your input deck should refer to `/input/sub-01` and
